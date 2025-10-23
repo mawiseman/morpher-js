@@ -20,7 +20,9 @@ export default defineConfig({
       external: [],
       output: {
         // Global variables to use in UMD build for externalized deps
-        globals: {}
+        globals: {},
+        // Use named exports to avoid warning
+        exports: 'named'
       }
     },
     sourcemap: true,

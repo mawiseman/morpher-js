@@ -46,6 +46,7 @@
   "homepage": "http://jembezmamy.github.io/morpher-js/",
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.4",
+    "terser": "^5.44.0",
     "vite": "^5.0.0"
   },
   "engines": {
