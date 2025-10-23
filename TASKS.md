@@ -48,14 +48,15 @@
 - [x] Remove Chrome detection hack (triangle.js)
 
 ### Memory Management
-- [ ] Implement `dispose()` method for Morpher class
-- [ ] Implement `dispose()` method for Image class
-- [ ] Implement `dispose()` method for Triangle class
-- [ ] Implement `dispose()` method for Mesh class
-- [ ] Add proper event listener cleanup in Triangle removal
-- [ ] Add canvas context cleanup
-- [ ] Add image reference cleanup
-- [ ] Implement proper `cancelAnimationFrame` cleanup
+- [x] Implement `dispose()` method for Morpher class
+- [x] Implement `dispose()` method for Image class
+- [x] Implement `dispose()` method for Triangle class
+- [x] Implement `dispose()` method for Mesh class
+- [x] Implement `dispose()` method for Point class
+- [x] Add proper event listener cleanup in Triangle removal
+- [x] Add canvas context cleanup
+- [x] Add image reference cleanup
+- [x] Implement proper `cancelAnimationFrame` cleanup
 
 ### Event System
 - [ ] Replace custom EventDispatcher with native EventTarget API

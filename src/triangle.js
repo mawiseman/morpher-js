@@ -187,4 +187,49 @@ export class Triangle extends EventDispatcher {
 
     return { x: p1.x - dx2, y: p1.y - dy2 };
   }
+
+  // Memory Management
+
+  /**
+   * Dispose of this triangle and clean up resources
+   *
+   * Removes all event listeners from points and clears references
+   * to prevent memory leaks. Call this when the triangle is no longer needed.
+   *
+   * @example
+   * const triangle = new Triangle(p1, p2, p3);
+   * // ... use triangle ...
+   * triangle.dispose();
+   */
+  dispose() {
+    // Remove event listeners from points
+    if (this.p1) {
+      this.p1.off('remove', this.remove);
+      this.p1 = null;
+    }
+
+    if (this.p2) {
+      this.p2.off('remove', this.remove);
+      this.p2 = null;
+    }
+
+    if (this.p3) {
+      this.p3.off('remove', this.remove);
+      this.p3 = null;
+    }
+
+    // Remove all event listeners from this object
+    this.off();
+
+    // Mark as disposed
+    this._disposed = true;
+  }
+
+  /**
+   * Check if triangle has been disposed
+   * @returns {boolean} True if disposed
+   */
+  isDisposed() {
+    return this._disposed === true;
+  }
 }

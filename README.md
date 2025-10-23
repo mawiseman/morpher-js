@@ -12,6 +12,7 @@ MorpherJS is a JavaScript image morphing library. It uses HTML 5 canvas element.
 * Modern ES6+ modules
 * Multiple output formats (ESM, CJS, UMD)
 * Optimized performance with hardware acceleration
+* Comprehensive memory management with `dispose()` methods
 
 ## Quick Start
 
@@ -163,6 +164,51 @@ Add a triangle using point indices.
 morpher.addTriangle(0, 1, 2);
 ```
 
+#### `dispose()`
+Clean up and free all resources. **Always call this when you're done** to prevent memory leaks.
+
+```javascript
+const morpher = new Morpher({ canvas });
+// ... use morpher ...
+
+// When finished, dispose everything
+morpher.dispose();
+
+// Optional: Check if disposed
+if (morpher.isDisposed()) {
+  console.log('Morpher has been cleaned up');
+}
+```
+
+**What gets cleaned up:**
+- Cancels pending animation frames
+- Removes all event listeners
+- Disposes all images and meshes
+- Clears canvas references
+- Frees all memory
+
+**Framework Integration Examples:**
+
+```javascript
+// React
+useEffect(() => {
+  const morpher = new Morpher({ canvas });
+  return () => morpher.dispose(); // Cleanup on unmount
+}, []);
+
+// Vue
+beforeUnmount() {
+  this.morpher.dispose();
+}
+
+// Angular
+ngOnDestroy() {
+  this.morpher.dispose();
+}
+```
+
+See [MEMORY_MANAGEMENT_SUMMARY.md](MEMORY_MANAGEMENT_SUMMARY.md) for detailed memory management documentation.
+
 ### Events
 
 ```javascript
@@ -268,10 +314,29 @@ v2.0 includes **massive performance improvements**:
 - **More precise timing** - Using `performance.now()` (microsecond precision)
 - **Modern APIs** - Removed vendor prefixes, using native APIs
 - **Smaller bundle** - Tree-shakeable ES modules
+- **No memory leaks** - Comprehensive `dispose()` methods for proper cleanup
 
 **Combined Result:** Up to **95% faster rendering** compared to v1.x
 
 See [PERFORMANCE.md](PERFORMANCE.md) for detailed benchmarks and technical details.
+
+## Memory Management
+
+v2.0 includes comprehensive memory management:
+
+- **`dispose()` methods** on all classes (Morpher, Image, Mesh, Triangle, Point)
+- **Automatic cleanup** of event listeners, canvas references, and animation frames
+- **Framework-friendly** - Works seamlessly with React, Vue, Angular lifecycle hooks
+- **No memory leaks** - Proper resource cleanup prevents memory growth in SPAs
+
+**Usage:**
+```javascript
+const morpher = new Morpher({ canvas });
+// ... use morpher ...
+morpher.dispose(); // Clean up when done
+```
+
+See [MEMORY_MANAGEMENT_SUMMARY.md](MEMORY_MANAGEMENT_SUMMARY.md) for detailed memory management documentation.
 
 ## Browser Support
 

@@ -489,4 +489,68 @@ export class Mesh extends EventDispatcher {
       this.removeTriangle(this.triangles[0], { silent: true });
     }
   }
+
+  // Memory Management
+
+  /**
+   * Dispose of this mesh and clean up resources
+   *
+   * Removes all event listeners from points and triangles, disposes them,
+   * and clears all references to prevent memory leaks. Call this when the
+   * mesh is no longer needed.
+   *
+   * @example
+   * const mesh = new Mesh();
+   * // ... use mesh ...
+   * mesh.dispose();
+   */
+  dispose() {
+    // Remove event listeners from and dispose all points
+    if (this.points && this.points.length > 0) {
+      for (const point of this.points) {
+        if (point) {
+          point.off('change', this.changeHandler);
+          point.off('remove', this.removePoint);
+
+          // Dispose point if it has a dispose method
+          if (point.dispose) {
+            point.dispose();
+          }
+        }
+      }
+      this.points = [];
+    }
+
+    // Remove event listeners from and dispose all triangles
+    if (this.triangles && this.triangles.length > 0) {
+      for (const triangle of this.triangles) {
+        if (triangle) {
+          triangle.off('remove', this.removeTriangle);
+
+          // Dispose triangle if it has a dispose method
+          if (triangle.dispose) {
+            triangle.dispose();
+          }
+        }
+      }
+      this.triangles = [];
+    }
+
+    // Clear bounds reference
+    this.bounds = null;
+
+    // Remove all event listeners from this object
+    this.off();
+
+    // Mark as disposed
+    this._disposed = true;
+  }
+
+  /**
+   * Check if mesh has been disposed
+   * @returns {boolean} True if disposed
+   */
+  isDisposed() {
+    return this._disposed === true;
+  }
 }

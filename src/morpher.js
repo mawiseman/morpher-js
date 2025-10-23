@@ -582,4 +582,91 @@ export class Morpher extends EventDispatcher {
     }
     this.images = [];
   }
+
+  /**
+   * Dispose of the morpher and clean up all resources
+   *
+   * This method should be called when the morpher is no longer needed
+   * to prevent memory leaks. It performs the following cleanup:
+   * - Cancels pending animation frames
+   * - Stops ongoing animations
+   * - Removes all event listeners
+   * - Disposes all images and mesh
+   * - Clears canvas and context references
+   * - Removes all internal references
+   *
+   * After calling dispose(), the morpher instance should not be used.
+   */
+  dispose() {
+    // Cancel any pending animation frame
+    if (this.requestID) {
+      if (window.cancelAnimationFrame) {
+        window.cancelAnimationFrame(this.requestID);
+      }
+      this.requestID = null;
+    }
+
+    // Stop any ongoing animation
+    this.t0 = null;
+    this.duration = null;
+    this.state0 = null;
+    this.state1 = null;
+    this.easingFunction = null;
+
+    // Remove and dispose all images
+    const imagesToDispose = this.images.slice();
+    for (const image of imagesToDispose) {
+      // Remove event listeners
+      for (const [event, handler] of Object.entries(this.imageEvents)) {
+        image.off(event, this[handler]);
+      }
+
+      // Dispose the image
+      if (image.dispose) {
+        image.dispose();
+      }
+    }
+    this.images = [];
+    this.triangles = [];
+
+    // Dispose mesh
+    if (this.mesh && this.mesh.dispose) {
+      this.mesh.dispose();
+    }
+    this.mesh = null;
+
+    // Clear canvas references
+    // Note: We don't clear the canvas itself as it may be in the DOM
+    // Just clear our references
+    this.ctx = null;
+    this.tmpCtx = null;
+
+    // Clear temp canvas (not in DOM, safe to clear)
+    if (this.tmpCanvas) {
+      this.tmpCanvas.width = 0;
+      this.tmpCanvas.height = 0;
+      this.tmpCanvas = null;
+    }
+
+    // Clear function references
+    this.blendFunction = null;
+    this.finalTouchFunction = null;
+
+    // Clear state
+    this.state = null;
+
+    // Remove all event listeners from this object
+    this.off();
+
+    // Mark as disposed
+    this._disposed = true;
+  }
+
+  /**
+   * Check if morpher has been disposed
+   * @returns {boolean} True if disposed
+   */
+  isDisposed() {
+    return this._disposed === true;
+  }
 }

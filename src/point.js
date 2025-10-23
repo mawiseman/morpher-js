@@ -165,4 +165,36 @@ export class Point extends EventDispatcher {
     this.x = null;
     this.y = null;
   }
+
+  // Memory Management
+
+  /**
+   * Dispose of this point and clean up resources
+   *
+   * Removes all event listeners and clears references to prevent memory leaks.
+   * Call this when the point is no longer needed.
+   *
+   * @example
+   * const point = new Point(100, 200);
+   * // ... use point ...
+   * point.dispose();
+   */
+  dispose() {
+    // Clear mesh reference
+    this.mesh = null;
+
+    // Remove all event listeners from this object
+    this.off();
+
+    // Mark as disposed
+    this._disposed = true;
+  }
+
+  /**
+   * Check if point has been disposed
+   * @returns {boolean} True if disposed
+   */
+  isDisposed() {
+    return this._disposed === true;
+  }
 }

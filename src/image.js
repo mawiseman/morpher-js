@@ -311,4 +311,62 @@ export class Image extends EventDispatcher {
       this.setSrc(json.src);
     }
   }
+
+  // Memory Management
+
+  /**
+   * Dispose of this image and clean up resources
+   *
+   * Removes all event listeners, disposes the mesh, and clears references
+   * to prevent memory leaks. Call this when the image is no longer needed.
+   *
+   * @example
+   * const image = new Image({ src: 'photo.jpg' });
+   * // ... use image ...
+   * image.dispose();
+   */
+  dispose() {
+    // Remove event listeners from mesh
+    if (this.mesh) {
+      this.mesh.off('all', this.propagateMeshEvent);
+      this.mesh.off('change:bounds', this.refreshSource);
+
+      // Dispose mesh
+      if (this.mesh.dispose) {
+        this.mesh.dispose();
+      }
+      this.mesh = null;
+    }
+
+    // Clear image element event handler
+    if (this.el) {
+      this.el.onload = null;
+      this.el = null;
+    }
+
+    // Clear source canvas
+    if (this.source) {
+      this.source.width = 0;
+      this.source.height = 0;
+      this.source = null;
+    }
+
+    // Clear references
+    this.triangles = null;
+    this.points = null;
+
+    // Remove all event listeners from this object
+    this.off();
+
+    // Mark as disposed
+    this._disposed = true;
+  }
+
+  /**
+   * Check if image has been disposed
+   * @returns {boolean} True if disposed
+   */
+  isDisposed() {
+    return this._disposed === true;
+  }
 }
