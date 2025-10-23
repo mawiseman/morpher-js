@@ -297,9 +297,12 @@ morpher-js/
 ├── examples/            # Example demonstrations
 │   ├── demos/          # All original demos (5 complete examples)
 │   └── README.md       # Examples documentation
-├── source/             # Old CoffeeScript files (deprecated)
+├── tests/              # Test files
+│   ├── test-event-dispatcher.js
+│   └── test-security.js
 ├── dist/               # Built files (generated)
 ├── index.html          # Examples launcher
+├── package.json        # Node dependencies
 └── vite.config.js      # Build configuration
 ```
 

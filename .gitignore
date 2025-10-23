@@ -1,8 +1,3 @@
-# Old Middleman build artifacts
-build
-.bundle
-.sass-cache
-
 # Node/NPM
 node_modules
 npm-debug.log*
@@ -13,6 +8,10 @@ pnpm-debug.log*
 # Vite build output
 dist
 *.local
+
+# Test files (keep tests/ directory but ignore output)
+tests/*.log
+tests/coverage
 
 # Editor directories
 .vscode/*
