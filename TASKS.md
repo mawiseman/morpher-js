@@ -59,11 +59,11 @@
 - [x] Implement proper `cancelAnimationFrame` cleanup
 
 ### Event System
-- [ ] Replace custom EventDispatcher with native EventTarget API
-- [ ] Or integrate EventEmitter3 library
-- [ ] Update all event listeners to use new API
-- [ ] Update event triggering to use CustomEvent
-- [ ] Remove Backbone Events dependency
+- [x] Replace custom EventDispatcher with native EventTarget API
+- [x] Maintain backward compatible on/off/trigger API
+- [x] Update event triggering to use CustomEvent
+- [x] Remove Backbone Events dependency (replaced with native EventTarget)
+- [x] Add comprehensive tests for event system
 
 ### Security Fixes
 - [ ] Remove `eval()` usage for custom blend functions

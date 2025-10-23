@@ -13,6 +13,7 @@ MorpherJS is a JavaScript image morphing library. It uses HTML 5 canvas element.
 * Multiple output formats (ESM, CJS, UMD)
 * Optimized performance with hardware acceleration
 * Comprehensive memory management with `dispose()` methods
+* Native EventTarget-based event system
 
 ## Quick Start
 
@@ -211,6 +212,8 @@ See [MEMORY_MANAGEMENT_SUMMARY.md](MEMORY_MANAGEMENT_SUMMARY.md) for detailed me
 
 ### Events
 
+MorpherJS v2.0 uses a modern event system based on native EventTarget with a familiar on/off/trigger API.
+
 ```javascript
 morpher.on('load', (morpher, canvas) => {
   // All images loaded
@@ -237,6 +240,15 @@ morpher.on('resize', (morpher, canvas) => {
 });
 ```
 
+**Event System Features:**
+- Uses native EventTarget for optimal performance
+- Space-separated event names: `morpher.on('change:x change:y', handler)`
+- Special 'all' event: `morpher.on('all', (eventName, ...args) => {})`
+- Context binding: `morpher.on('load', handler, this)`
+- Flexible removal: `morpher.off()`, `morpher.off('load')`, `morpher.off('load', handler)`
+
+See [EVENT_SYSTEM_SUMMARY.md](EVENT_SYSTEM_SUMMARY.md) for detailed event system documentation.
+
 ## Migration from v1.x
 
 Version 2.0 is a complete rewrite with breaking changes:
@@ -260,7 +272,7 @@ Version 2.0 is a complete rewrite with breaking changes:
    const morpher = new Morpher(config);
    ```
 
-2. **Event system:** Same API, but now uses native EventDispatcher
+2. **Event system:** Same API, but now uses native EventTarget (fully backward compatible)
 
 3. **Build output:** Now provides ESM, CJS, and UMD formats
 
@@ -337,6 +349,38 @@ morpher.dispose(); // Clean up when done
 ```
 
 See [MEMORY_MANAGEMENT_SUMMARY.md](MEMORY_MANAGEMENT_SUMMARY.md) for detailed memory management documentation.
+
+## Event System
+
+v2.0 includes a modern event system based on native EventTarget:
+
+- **Native performance** - Uses browser-optimized EventTarget internally
+- **Backward compatible** - Same on/off/trigger API as v1.x
+- **Standards compliant** - Web platform standard
+- **Zero dependencies** - No event library needed
+- **Better debugging** - Native events visible in browser DevTools
+
+**Features:**
+- Space-separated events: `on('event1 event2', handler)`
+- Context binding: `on('event', handler, context)`
+- 'all' event listener: `on('all', handler)` catches all events
+- Flexible removal: `off()` / `off('event')` / `off('event', handler)`
+
+**Usage:**
+```javascript
+// Listen to events
+morpher.on('load draw', handleEvent);
+
+// Remove listeners
+morpher.off('load', handleEvent);
+
+// Catch all events
+morpher.on('all', (eventName, ...args) => {
+  console.log(`Event: ${eventName}`, args);
+});
+```
+
+See [EVENT_SYSTEM_SUMMARY.md](EVENT_SYSTEM_SUMMARY.md) for detailed event system documentation.
 
 ## Browser Support
 
