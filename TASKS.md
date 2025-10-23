@@ -97,6 +97,10 @@
 - [x] Implement modern routing (if needed)
 - [x] Update localStorage persistence layer
 
+### Project Structure Improvements
+- [ ] structure different areas /src /demo /gui
+- [ ] review, cosolidate and move all the .md files out of the root
+
 ### Advanced Performance
 - [ ] Implement Web Workers for mesh calculations
 - [ ] Implement Web Workers for blend operations

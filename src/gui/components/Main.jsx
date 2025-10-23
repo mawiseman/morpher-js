@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { useProjects } from '../hooks/useProjects.js';
 import { Project } from './Project.jsx';
 import { Popup } from './Popup.jsx';
@@ -84,15 +84,8 @@ export function Main() {
 
         <hr />
 
-        <div className="project-menus">
-          {projects.map((project, index) => (
-            <ProjectMenu
-              key={project.id || index}
-              project={project}
-              isActive={index === currentIndex}
-              onSave={() => saveProject(index)}
-            />
-          ))}
+        <div className="project-menus" id="project-menus">
+          {/* Project menus will be rendered by Project components */}
         </div>
 
         <hr />
@@ -106,8 +99,9 @@ export function Main() {
       {projects.map((project, index) => (
         <Project
           key={project.id || index}
-          project={{ ...project, index }}
-          isVisible={index === currentIndex}
+          project={project}
+          projectIndex={index}
+          isActive={index === currentIndex}
           updateProject={updateProject}
           saveProject={saveProject}
         />
@@ -119,16 +113,6 @@ export function Main() {
         </Popup>
       )}
     </>
-  );
-}
-
-function ProjectMenu({ project, isActive, onSave }) {
-  if (!isActive) return null;
-
-  return (
-    <div className="project-menu visible" style={{ backgroundColor: project.color }}>
-      {/* Project-specific buttons will be rendered by Project component */}
-    </div>
   );
 }
 

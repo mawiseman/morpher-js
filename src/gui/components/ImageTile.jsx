@@ -25,6 +25,27 @@ export function ImageTile({
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   const morpherImage = image.morpherImage;
+  const hasOpenedFileRef = useRef(false);
+
+  // Auto-open file picker for new images (mimicking original Backbone behavior)
+  useEffect(() => {
+    console.log('ImageTile useEffect', {
+      hasOpened: hasOpenedFileRef.current,
+      hasFile: !!image.file,
+      url: image.url,
+      fileInputExists: !!fileInputRef.current
+    });
+    // Only open once for new images without files
+    if (!hasOpenedFileRef.current && !image.file && image.url === '') {
+      console.log('Auto-opening file picker for new image');
+      hasOpenedFileRef.current = true;
+      // Small delay to ensure component is mounted
+      setTimeout(() => {
+        console.log('Clicking file input, exists:', !!fileInputRef.current);
+        fileInputRef.current?.click();
+      }, 100);
+    }
+  }, [image.file, image.url]);
 
   // Load image when file data changes
   useEffect(() => {
@@ -37,27 +58,11 @@ export function ImageTile({
     imgElement.src = image.file;
   }, [image.file]);
 
-  // Listen to morpher image events
-  useEffect(() => {
-    if (!morpherImage) return;
-
-    const handleChange = () => {
-      drawCanvas();
-    };
-
-    morpherImage.on('change', handleChange);
-    morpherImage.on('triangle:add', handleChange);
-    morpherImage.on('triangle:remove', handleChange);
-
-    return () => {
-      morpherImage.off('change', handleChange);
-      morpherImage.off('triangle:add', handleChange);
-      morpherImage.off('triangle:remove', handleChange);
-    };
-  }, [morpherImage]);
+  // Use ref for drawCanvas to avoid closure issues with event listeners
+  const drawCanvasRef = useRef();
 
   // Draw canvas
-  const drawCanvas = () => {
+  drawCanvasRef.current = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -94,6 +99,27 @@ export function ImageTile({
     }
   };
 
+  const drawCanvas = () => drawCanvasRef.current?.();
+
+  // Listen to morpher image events - use ref to avoid closure issues
+  useEffect(() => {
+    if (!morpherImage) return;
+
+    const handleChange = () => {
+      drawCanvasRef.current?.();
+    };
+
+    morpherImage.on('change', handleChange);
+    morpherImage.on('triangle:add', handleChange);
+    morpherImage.on('triangle:remove', handleChange);
+
+    return () => {
+      morpherImage.off('change', handleChange);
+      morpherImage.off('triangle:add', handleChange);
+      morpherImage.off('triangle:remove', handleChange);
+    };
+  }, [morpherImage]);
+
   // Redraw when image or morpherImage changes
   useEffect(() => {
     drawCanvas();
@@ -108,7 +134,7 @@ export function ImageTile({
         canvasRef.current.width = canvas.width;
         canvasRef.current.height = canvas.height;
         setCanvasSize({ width: canvas.width, height: canvas.height });
-        drawCanvas();
+        drawCanvasRef.current?.();
       }
     };
 
@@ -198,8 +224,51 @@ export function ImageTile({
     onSave();
   };
 
+  const menuContent = (
+    <div className="menu">
+      <button title="Load image" data-action="openFile" onClick={handleFileClick}>
+        <div className="icon replace">📁</div>
+      </button>
+      <button
+        title="Move image"
+        data-action="move"
+        className={moveMode ? 'selected' : ''}
+        onClick={handleMoveToggle}
+      >
+        <div className="icon move">✋</div>
+      </button>
+      <button title="Delete" data-action="delete" onClick={handleDelete}>
+        <div className="icon delete">×</div>
+      </button>
+      <input
+        type="range"
+        name="targetWeight"
+        min="0"
+        max="1"
+        step="0.01"
+        value={image.targetWeight}
+        onChange={(e) => onWeightChange(e.target.value)}
+      />
+      <input
+        type="file"
+        name="file"
+        ref={fileInputRef}
+        onChange={handleFileInput}
+        accept="image/*"
+        style={{ display: 'none' }}
+      />
+      <input
+        type="text"
+        name="url"
+        value={image.url}
+        onChange={(e) => onUpdate({ url: e.target.value })}
+        placeholder="Image URL or name"
+      />
+    </div>
+  );
+
   return (
-    <Tile position={position} className="image">
+    <Tile position={position} className="image" menu={menuContent}>
       <canvas
         ref={canvasRef}
         width={canvasSize.width}
@@ -251,48 +320,6 @@ export function ImageTile({
           onSplit={() => handleEdgeSplit(triangle.p3, triangle.p1)}
         />,
       ])}
-
-      {/* Menu */}
-      <div className="menu">
-        <button title="Load image" data-action="openFile" onClick={handleFileClick}>
-          <div className="icon replace">📁</div>
-        </button>
-        <button
-          title="Move image"
-          data-action="move"
-          className={moveMode ? 'selected' : ''}
-          onClick={handleMoveToggle}
-        >
-          <div className="icon move">✋</div>
-        </button>
-        <button title="Delete" data-action="delete" onClick={handleDelete}>
-          <div className="icon delete">×</div>
-        </button>
-        <input
-          type="range"
-          name="targetWeight"
-          min="0"
-          max="1"
-          step="0.01"
-          value={image.targetWeight}
-          onChange={(e) => onWeightChange(e.target.value)}
-        />
-        <input
-          type="file"
-          name="file"
-          ref={fileInputRef}
-          onChange={handleFileInput}
-          accept="image/*"
-          style={{ display: 'none' }}
-        />
-        <input
-          type="text"
-          name="url"
-          value={image.url}
-          onChange={(e) => onUpdate({ url: e.target.value })}
-          placeholder="Image URL or name"
-        />
-      </div>
     </Tile>
   );
 }

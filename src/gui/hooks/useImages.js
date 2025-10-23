@@ -1,11 +1,11 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Image as MorpherImage } from '../../index.js';
 import { LocalStorageManager } from '../utils/storage.js';
 
 /**
  * Hook for managing images within a project
  */
-export function useImages(project, updateProject, saveProject) {
+export function useImages(project, projectIndex, updateProject, saveProject) {
   if (!project) {
     return {
       images: [],
@@ -17,10 +17,15 @@ export function useImages(project, updateProject, saveProject) {
     };
   }
 
-  const imagesStorage = new LocalStorageManager(`Images${project.id}`);
+  // Memoize storage instance to prevent recreation on every render
+  const imagesStorage = useMemo(
+    () => new LocalStorageManager(`Images${project.id}`),
+    [project.id]
+  );
 
   // Add a new image
   const addImage = useCallback(() => {
+    console.log('useImages.addImage called');
     const morpherImage = new MorpherImage();
 
     const imageData = {
@@ -43,12 +48,14 @@ export function useImages(project, updateProject, saveProject) {
 
     project.morpher.addImage(morpherImage);
 
-    updateProject(project.index, {
-      images: [...project.images, imageData]
+    const newImages = [...project.images, imageData];
+    console.log('Adding image to project, new images count:', newImages.length, 'imageData:', imageData);
+    updateProject(projectIndex, {
+      images: newImages
     });
 
     return imageData;
-  }, [project, updateProject, imagesStorage]);
+  }, [project, projectIndex, updateProject, imagesStorage]);
 
   // Delete an image
   const deleteImage = useCallback((index) => {
@@ -63,8 +70,8 @@ export function useImages(project, updateProject, saveProject) {
     project.morpher.removeImage(image.morpherImage);
 
     const newImages = project.images.filter((_, i) => i !== index);
-    updateProject(project.index, { images: newImages });
-  }, [project, updateProject, imagesStorage]);
+    updateProject(projectIndex, { images: newImages });
+  }, [project, projectIndex, updateProject, imagesStorage]);
 
   // Update an image
   const updateImage = useCallback((index, updates) => {
@@ -79,8 +86,8 @@ export function useImages(project, updateProject, saveProject) {
       newImages[index].morpherImage.setSrc(updates.file);
     }
 
-    // Find the project index in the projects array
-    updateProject(project.index, { images: newImages });
+    // Update project state
+    updateProject(projectIndex, { images: newImages });
 
     // Save to storage (exclude morpherImage from storage)
     const imageDataForStorage = {
@@ -91,7 +98,7 @@ export function useImages(project, updateProject, saveProject) {
       file: newImages[index].file,
     };
     imagesStorage.update(imageDataForStorage);
-  }, [project, updateProject, imagesStorage]);
+  }, [project, projectIndex, updateProject, imagesStorage]);
 
   // Set image from file
   const setImageFile = useCallback((index, file) => {
@@ -113,11 +120,11 @@ export function useImages(project, updateProject, saveProject) {
       }
 
       updateImage(index, updates);
-      saveProject(project.index);
+      saveProject(projectIndex);
     };
 
     reader.readAsDataURL(file);
-  }, [project, updateImage, saveProject]);
+  }, [project, projectIndex, updateImage, saveProject]);
 
   // Set image weight
   const setImageWeight = useCallback((index, targetWeight) => {
@@ -127,8 +134,8 @@ export function useImages(project, updateProject, saveProject) {
     // Normalize other image weights
     normalizeWeights(project, index, weight, updateImage);
 
-    saveProject(project.index);
-  }, [project, updateImage, saveProject]);
+    saveProject(projectIndex);
+  }, [project, projectIndex, updateImage, saveProject]);
 
   return {
     images: project.images,

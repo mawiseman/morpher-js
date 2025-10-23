@@ -653,6 +653,11 @@ export class Morpher extends EventDispatcher {
    * @private
    */
   static validateBlendFunction(fn) {
+    // Silently ignore null/undefined (expected for projects without custom blend functions)
+    if (fn === null || fn === undefined) {
+      return null;
+    }
+
     // If it's already a function, validate it's actually callable
     if (typeof fn === 'function') {
       // Additional safety: check function length (should accept 3 params)
@@ -674,7 +679,7 @@ export class Morpher extends EventDispatcher {
       return null;
     }
 
-    // Reject anything else (objects, arrays, etc.)
+    // Reject anything else (objects, arrays, etc.) - only warn for truly invalid types
     console.warn('Invalid blend function. Must be a function or string name.');
     return null;
   }
@@ -689,6 +694,11 @@ export class Morpher extends EventDispatcher {
    * @private
    */
   static validateEasingFunction(fn) {
+    // Silently ignore null/undefined (expected for projects without custom easing functions)
+    if (fn === null || fn === undefined) {
+      return null;
+    }
+
     // If it's already a function, validate it's actually callable
     if (typeof fn === 'function') {
       // Easing functions should accept 1 parameter

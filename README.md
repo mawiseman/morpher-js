@@ -209,7 +209,7 @@ ngOnDestroy() {
 }
 ```
 
-See [MEMORY_MANAGEMENT_SUMMARY.md](MEMORY_MANAGEMENT_SUMMARY.md) for detailed memory management documentation.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed memory management documentation.
 
 ### Events
 
@@ -248,7 +248,7 @@ morpher.on('resize', (morpher, canvas) => {
 - Context binding: `morpher.on('load', handler, this)`
 - Flexible removal: `morpher.off()`, `morpher.off('load')`, `morpher.off('load', handler)`
 
-See [EVENT_SYSTEM_SUMMARY.md](EVENT_SYSTEM_SUMMARY.md) for detailed event system documentation.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed event system documentation.
 
 ## Migration from v1.x
 
@@ -277,7 +277,7 @@ Version 2.0 is a complete rewrite with breaking changes:
 
 3. **Build output:** Now provides ESM, CJS, and UMD formats
 
-See [MIGRATION_STATUS.md](MIGRATION_STATUS.md) for detailed migration status.
+See [docs/MIGRATION.md](docs/MIGRATION.md) for detailed migration guide.
 
 ## Development
 
@@ -334,7 +334,7 @@ v2.0 includes **massive performance improvements**:
 
 **Combined Result:** Up to **95% faster rendering** compared to v1.x
 
-See [PERFORMANCE.md](PERFORMANCE.md) for detailed benchmarks and technical details.
+See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed benchmarks and technical details.
 
 ## Memory Management
 
@@ -352,7 +352,7 @@ const morpher = new Morpher({ canvas });
 morpher.dispose(); // Clean up when done
 ```
 
-See [MEMORY_MANAGEMENT_SUMMARY.md](MEMORY_MANAGEMENT_SUMMARY.md) for detailed memory management documentation.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed memory management documentation.
 
 ## Event System
 
@@ -384,7 +384,7 @@ morpher.on('all', (eventName, ...args) => {
 });
 ```
 
-See [EVENT_SYSTEM_SUMMARY.md](EVENT_SYSTEM_SUMMARY.md) for detailed event system documentation.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed event system documentation.
 
 ## Security
 
@@ -424,7 +424,7 @@ morpher.setBlendFunction(customBlend); // Returns true if valid
 morpher.fromJSON(untrustedJSON); // All input validated
 ```
 
-See [SECURITY_SUMMARY.md](SECURITY_SUMMARY.md) for detailed security documentation.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed security documentation.
 
 ## Browser Support
 
@@ -435,6 +435,26 @@ Requires modern browser with:
 - performance.now()
 
 Tested on Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+
+## Documentation
+
+### Core Documentation
+
+- **[README.md](README.md)** - This file (getting started, features, API)
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guide for contributors
+
+### Technical Documentation
+
+- **[docs/MIGRATION.md](docs/MIGRATION.md)** - Migration guide from v1.x to v2.0
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical architecture, code quality, memory management, events, security
+- **[docs/PERFORMANCE.md](docs/PERFORMANCE.md)** - Performance benchmarks and optimizations
+
+### Component Documentation
+
+- **[src/README.md](src/README.md)** - Source code overview
+- **[src/gui/README.md](src/gui/README.md)** - React GUI editor documentation
+- **[examples/README.md](examples/README.md)** - Examples and demos overview
 
 ## License
 

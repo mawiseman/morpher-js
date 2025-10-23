@@ -3,7 +3,7 @@ import React, { forwardRef } from 'react';
 /**
  * Base Tile component
  */
-export const Tile = forwardRef(function Tile({ position, className = '', children }, ref) {
+export const Tile = forwardRef(function Tile({ position, className = '', children, menu }, ref) {
   const style = {
     position: 'absolute',
     left: `${position.x * 100}%`,
@@ -19,6 +19,7 @@ export const Tile = forwardRef(function Tile({ position, className = '', childre
           {children}
         </div>
       </div>
+      {menu}
     </div>
   );
 });

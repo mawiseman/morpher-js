@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useImages } from '../hooks/useImages.js';
 import { ImageTile } from './ImageTile.jsx';
 import { Tile } from './Tile.jsx';
 import { Popup } from './Popup.jsx';
 
-export function Project({ project, isVisible, updateProject, saveProject }) {
+export function Project({ project, projectIndex, isActive, updateProject, saveProject }) {
   const { images, addImage, deleteImage, updateImage, setImageFile, setImageWeight } =
-    useImages(project, updateProject, saveProject);
+    useImages(project, projectIndex, updateProject, saveProject);
 
   const [selectedPoints, setSelectedPoints] = useState([]);
   const [highlightedPoint, setHighlightedPoint] = useState(null);
@@ -15,6 +16,33 @@ export function Project({ project, isVisible, updateProject, saveProject }) {
   const [showFinalTouchPopup, setShowFinalTouchPopup] = useState(false);
 
   const previewCanvasRef = useRef(null);
+  const [menuContainer, setMenuContainer] = useState(null);
+
+  // Get menu container on mount
+  useEffect(() => {
+    const container = document.getElementById('project-menus');
+    if (container) {
+      setMenuContainer(container);
+    }
+  }, []);
+
+  // Handler functions
+  const handleAddImage = () => {
+    console.log('Project.handleAddImage called');
+    addImage();
+  };
+
+  const handleExport = () => {
+    setShowCodePopup(true);
+  };
+
+  const handleEditBlend = () => {
+    setShowBlendPopup(true);
+  };
+
+  const handleEditFinalTouch = () => {
+    setShowFinalTouchPopup(true);
+  };
 
   // Update canvas size when morpher resizes
   useEffect(() => {
@@ -37,9 +65,9 @@ export function Project({ project, isVisible, updateProject, saveProject }) {
     };
   }, [project]);
 
-  // Attach morpher canvas to preview when visible
+  // Attach morpher canvas to preview when active
   useEffect(() => {
-    if (!isVisible || !project || !previewCanvasRef.current) return;
+    if (!isActive || !project || !previewCanvasRef.current) return;
 
     const artboard = previewCanvasRef.current.querySelector('.artboard');
     if (artboard && project.morpher.canvas) {
@@ -49,15 +77,7 @@ export function Project({ project, isVisible, updateProject, saveProject }) {
       }
       artboard.appendChild(project.morpher.canvas);
     }
-  }, [isVisible, project]);
-
-  const handleAddImage = () => {
-    addImage();
-  };
-
-  const handleExport = () => {
-    setShowCodePopup(true);
-  };
+  }, [isActive, project]);
 
   const getExportCode = () => {
     const json = project.morpher.toJSON();
@@ -90,7 +110,7 @@ export function Project({ project, isVisible, updateProject, saveProject }) {
       // If 3 points selected, create triangle
       if (newSelected.length === 3) {
         project.morpher.addTriangle(newSelected[0], newSelected[1], newSelected[2]);
-        saveProject(project.index);
+        saveProject(projectIndex);
         return [];
       }
 
@@ -103,8 +123,8 @@ export function Project({ project, isVisible, updateProject, saveProject }) {
       const fn = new Function('destination', 'source', 'weight', code);
       project.morpher.blendFunction = fn;
       project.morpher.draw();
-      updateProject(project.index, { blendFunction: code });
-      saveProject(project.index);
+      updateProject(projectIndex, { blendFunction: code });
+      saveProject(projectIndex);
     } catch (err) {
       alert(`Error in blend function: ${err.message}`);
     }
@@ -115,43 +135,47 @@ export function Project({ project, isVisible, updateProject, saveProject }) {
       const fn = new Function('canvas', code);
       project.morpher.finalTouchFunction = fn;
       project.morpher.draw();
-      updateProject(project.index, { finalTouchFunction: code });
-      saveProject(project.index);
+      updateProject(projectIndex, { finalTouchFunction: code });
+      saveProject(projectIndex);
     } catch (err) {
       alert(`Error in final touch function: ${err.message}`);
     }
   };
 
-  if (!isVisible) {
-    return null;
-  }
-
   const tiles = [...images];
   const middleIndex = Math.floor(tiles.length / 2);
 
+  // Render project menu using portal
+  const projectMenu = menuContainer && isActive ? createPortal(
+    <div className="project-menu visible" style={{ backgroundColor: project.color }}>
+      <button data-action="addImage" onClick={handleAddImage}>
+        <div className="icon image">📷</div>
+        Add image
+      </button>
+      <button data-action="editBlendFunction" onClick={handleEditBlend}>
+        <div className="icon editFunction">ƒ</div>
+        Blend function
+      </button>
+      <button data-action="editFinalTouchFunction" onClick={handleEditFinalTouch}>
+        <div className="icon editFunction">ƒ</div>
+        Final touch function
+      </button>
+      <button data-action="export" onClick={handleExport}>
+        <div className="icon export">↓</div>
+        Export code
+      </button>
+    </div>,
+    menuContainer
+  ) : null;
+
+  if (!isActive) {
+    return projectMenu;
+  }
+
   return (
     <>
+      {projectMenu}
       <div className="project visible">
-        {/* Project menu */}
-        <div className="project-menu visible" style={{ backgroundColor: project.color }}>
-          <button data-action="addImage" onClick={handleAddImage}>
-            <div className="icon image">📷</div>
-            Add image
-          </button>
-          <button data-action="editBlendFunction" onClick={() => setShowBlendPopup(true)}>
-            <div className="icon editFunction">ƒ</div>
-            Blend function
-          </button>
-          <button data-action="editFinalTouchFunction" onClick={() => setShowFinalTouchPopup(true)}>
-            <div className="icon editFunction">ƒ</div>
-            Final touch function
-          </button>
-          <button data-action="export" onClick={handleExport}>
-            <div className="icon export">↓</div>
-            Export code
-          </button>
-        </div>
-
         {/* Images with preview in the middle */}
         {images.map((image, index) => {
           // Insert preview tile in the middle
@@ -173,7 +197,7 @@ export function Project({ project, isVisible, updateProject, saveProject }) {
               onPointSelect={handlePointSelect}
               highlightedPoint={highlightedPoint}
               selectedPoints={selectedPoints}
-              onSave={() => saveProject(project.index)}
+              onSave={() => saveProject(projectIndex)}
             />
           );
         })}
