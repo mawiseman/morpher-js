@@ -108,9 +108,17 @@ export class Morpher extends EventDispatcher {
 
   /**
    * Animate to target weights
+   *
    * @param {number[]} weights - Target weights
    * @param {number} duration - Animation duration in milliseconds
-   * @param {Function} [easing] - Optional easing function
+   * @param {Function|string} [easing] - Optional easing function or function name from registry
+   *
+   * @example
+   * // With predefined easing
+   * morpher.animate([0, 1], 500, 'easeInOutQuad');
+   *
+   * // With custom function
+   * morpher.animate([0, 1], 500, (t) => t * t);
    */
   animate(weights, duration, easing) {
     this.state0 = [];
@@ -120,7 +128,15 @@ export class Morpher extends EventDispatcher {
     this.state1 = weights;
     this.t0 = performance.now();
     this.duration = duration;
-    this.easingFunction = easing;
+
+    // Validate easing function if provided
+    if (easing) {
+      const validated = Morpher.validateEasingFunction(easing);
+      this.easingFunction = validated; // Will be null if invalid, falls back to linear
+    } else {
+      this.easingFunction = null;
+    }
+
     this.trigger('animation:start', this);
     this.draw();
   }
@@ -471,6 +487,36 @@ export class Morpher extends EventDispatcher {
   }
 
   /**
+   * Predefined blend functions registry
+   * Safe, pre-vetted functions that can be used by name
+   */
+  static blendFunctions = {
+    default: 'defaultBlendFunction',
+    software: 'softwareBlendFunction',
+    additive: 'defaultBlendFunction', // Alias for default
+    normal: 'normalBlendFunction',
+    multiply: 'multiplyBlendFunction',
+    screen: 'screenBlendFunction'
+  };
+
+  /**
+   * Predefined easing functions registry
+   * Safe, pre-vetted easing functions that can be used by name
+   */
+  static easingFunctions = {
+    linear: (t) => t,
+    easeInQuad: (t) => t * t,
+    easeOutQuad: (t) => t * (2 - t),
+    easeInOutQuad: (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
+    easeInCubic: (t) => t * t * t,
+    easeOutCubic: (t) => --t * t * t + 1,
+    easeInOutCubic: (t) => (t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1),
+    easeInQuart: (t) => t * t * t * t,
+    easeOutQuart: (t) => 1 - --t * t * t * t,
+    easeInOutQuart: (t) => (t < 0.5 ? 8 * t * t * t * t : 1 - 8 * --t * t * t * t)
+  };
+
+  /**
    * Default blend function (GPU-accelerated additive blending)
    *
    * This function uses hardware-accelerated canvas compositing instead of
@@ -496,6 +542,63 @@ export class Morpher extends EventDispatcher {
     ctx.drawImage(source, 0, 0);
 
     // Restore original settings
+    ctx.globalCompositeOperation = originalComposite;
+    ctx.globalAlpha = originalAlpha;
+  }
+
+  /**
+   * Normal blend function (standard alpha blending)
+   *
+   * @param {HTMLCanvasElement} destination - Destination canvas
+   * @param {HTMLCanvasElement} source - Source canvas
+   * @param {number} weight - Blend weight (0-1)
+   */
+  static normalBlendFunction(destination, source, weight) {
+    const ctx = destination.getContext('2d');
+    const originalAlpha = ctx.globalAlpha;
+
+    ctx.globalAlpha = weight;
+    ctx.drawImage(source, 0, 0);
+
+    ctx.globalAlpha = originalAlpha;
+  }
+
+  /**
+   * Multiply blend function
+   *
+   * @param {HTMLCanvasElement} destination - Destination canvas
+   * @param {HTMLCanvasElement} source - Source canvas
+   * @param {number} weight - Blend weight (0-1)
+   */
+  static multiplyBlendFunction(destination, source, weight) {
+    const ctx = destination.getContext('2d');
+    const originalComposite = ctx.globalCompositeOperation;
+    const originalAlpha = ctx.globalAlpha;
+
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = weight;
+    ctx.drawImage(source, 0, 0);
+
+    ctx.globalCompositeOperation = originalComposite;
+    ctx.globalAlpha = originalAlpha;
+  }
+
+  /**
+   * Screen blend function
+   *
+   * @param {HTMLCanvasElement} destination - Destination canvas
+   * @param {HTMLCanvasElement} source - Source canvas
+   * @param {number} weight - Blend weight (0-1)
+   */
+  static screenBlendFunction(destination, source, weight) {
+    const ctx = destination.getContext('2d');
+    const originalComposite = ctx.globalCompositeOperation;
+    const originalAlpha = ctx.globalAlpha;
+
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = weight;
+    ctx.drawImage(source, 0, 0);
+
     ctx.globalCompositeOperation = originalComposite;
     ctx.globalAlpha = originalAlpha;
   }
@@ -540,7 +643,205 @@ export class Morpher extends EventDispatcher {
   }
 
   /**
+   * Validate and sanitize a blend function
+   *
+   * Security: Only accepts actual function objects or predefined function names
+   * Rejects strings that could be eval'd or Function constructor inputs
+   *
+   * @param {Function|string} fn - Function or function name from registry
+   * @returns {Function|null} Validated function or null if invalid
+   * @private
+   */
+  static validateBlendFunction(fn) {
+    // If it's already a function, validate it's actually callable
+    if (typeof fn === 'function') {
+      // Additional safety: check function length (should accept 3 params)
+      // This prevents some malicious functions but still allows custom ones
+      if (fn.length !== 3) {
+        console.warn('Blend function must accept exactly 3 parameters (destination, source, weight)');
+        return null;
+      }
+      return fn;
+    }
+
+    // If it's a string, look it up in the registry
+    if (typeof fn === 'string') {
+      const functionName = Morpher.blendFunctions[fn];
+      if (functionName && typeof Morpher[functionName] === 'function') {
+        return Morpher[functionName];
+      }
+      console.warn(`Unknown blend function: ${fn}. Using default.`);
+      return null;
+    }
+
+    // Reject anything else (objects, arrays, etc.)
+    console.warn('Invalid blend function. Must be a function or string name.');
+    return null;
+  }
+
+  /**
+   * Validate and sanitize an easing function
+   *
+   * Security: Only accepts actual function objects or predefined function names
+   *
+   * @param {Function|string} fn - Function or function name from registry
+   * @returns {Function|null} Validated function or null if invalid
+   * @private
+   */
+  static validateEasingFunction(fn) {
+    // If it's already a function, validate it's actually callable
+    if (typeof fn === 'function') {
+      // Easing functions should accept 1 parameter
+      if (fn.length !== 1) {
+        console.warn('Easing function must accept exactly 1 parameter (t)');
+        return null;
+      }
+      return fn;
+    }
+
+    // If it's a string, look it up in the registry
+    if (typeof fn === 'string') {
+      const easingFn = Morpher.easingFunctions[fn];
+      if (easingFn && typeof easingFn === 'function') {
+        return easingFn;
+      }
+      console.warn(`Unknown easing function: ${fn}. Using linear.`);
+      return null;
+    }
+
+    console.warn('Invalid easing function. Must be a function or string name.');
+    return null;
+  }
+
+  /**
+   * Sanitize JSON input to remove potentially dangerous content
+   *
+   * Security: Removes function properties, validates numeric values
+   *
+   * @param {Object} json - Raw JSON input
+   * @returns {Object} Sanitized JSON
+   * @private
+   */
+  static sanitizeJSON(json) {
+    if (typeof json !== 'object' || json === null) {
+      return {};
+    }
+
+    const sanitized = {};
+
+    // Only copy safe properties
+    const safeProperties = ['images', 'triangles', 'blendFunction'];
+
+    for (const prop of safeProperties) {
+      if (prop in json) {
+        if (prop === 'blendFunction') {
+          // Special handling for blend function - must validate
+          const validated = Morpher.validateBlendFunction(json[prop]);
+          if (validated) {
+            sanitized[prop] = validated;
+          }
+        } else if (prop === 'images' && Array.isArray(json[prop])) {
+          // Recursively sanitize image data
+          sanitized[prop] = json[prop].map((img) => {
+            if (typeof img !== 'object' || img === null) return {};
+
+            const sanitizedImg = {};
+            // Only allow safe image properties
+            const safeImgProps = ['src', 'x', 'y', 'points'];
+
+            for (const imgProp of safeImgProps) {
+              if (imgProp in img) {
+                if (imgProp === 'x' || imgProp === 'y') {
+                  // Validate numbers
+                  const val = Number(img[imgProp]);
+                  if (!isNaN(val) && isFinite(val)) {
+                    sanitizedImg[imgProp] = val;
+                  }
+                } else if (imgProp === 'src' && typeof img[imgProp] === 'string') {
+                  // Validate URLs - basic check for dangerous protocols
+                  const src = img[imgProp];
+                  if (!src.startsWith('javascript:') && !src.startsWith('data:text/html')) {
+                    sanitizedImg[imgProp] = src;
+                  }
+                } else if (imgProp === 'points' && Array.isArray(img[imgProp])) {
+                  // Validate point arrays
+                  sanitizedImg[imgProp] = img[imgProp].map((point) => {
+                    if (typeof point !== 'object' || point === null) return { x: 0, y: 0 };
+                    const x = Number(point.x);
+                    const y = Number(point.y);
+                    return {
+                      x: !isNaN(x) && isFinite(x) ? x : 0,
+                      y: !isNaN(y) && isFinite(y) ? y : 0
+                    };
+                  });
+                }
+              }
+            }
+            return sanitizedImg;
+          });
+        } else if (prop === 'triangles' && Array.isArray(json[prop])) {
+          // Validate triangles
+          sanitized[prop] = json[prop].map((triangle) => {
+            if (!Array.isArray(triangle) || triangle.length !== 3) {
+              return [0, 0, 0];
+            }
+            return triangle.map((idx) => {
+              const val = Number(idx);
+              return !isNaN(val) && isFinite(val) && val >= 0 ? Math.floor(val) : 0;
+            });
+          });
+        }
+      }
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * Set a custom blend function
+   *
+   * Security: Validates function before setting
+   *
+   * @param {Function|string} fn - Blend function or function name from registry
+   * @returns {boolean} True if function was set successfully
+   */
+  setBlendFunction(fn) {
+    const validated = Morpher.validateBlendFunction(fn);
+    if (validated) {
+      this.blendFunction = validated;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Set a custom final touch function
+   *
+   * Security: Validates function before setting
+   *
+   * @param {Function} fn - Final touch function
+   * @returns {boolean} True if function was set successfully
+   */
+  setFinalTouchFunction(fn) {
+    if (typeof fn !== 'function') {
+      console.warn('Final touch function must be a function');
+      return false;
+    }
+
+    if (fn.length !== 1) {
+      console.warn('Final touch function must accept exactly 1 parameter (canvas)');
+      return false;
+    }
+
+    this.finalTouchFunction = fn;
+    return true;
+  }
+
+  /**
    * Load morpher configuration from JSON
+   *
+   * Security: Sanitizes and validates all input
+   *
    * @param {Object} [json={}] - Morpher configuration
    * @param {Object} [params={}] - Optional parameters
    * @param {boolean} [params.hard=false] - Reset before loading
@@ -550,24 +851,30 @@ export class Morpher extends EventDispatcher {
       this.reset();
     }
 
-    if (json.blendFunction) {
-      this.blendFunction = json.blendFunction;
+    // Sanitize JSON input to prevent injection attacks
+    const sanitized = Morpher.sanitizeJSON(json);
+
+    // Use validated blend function if provided
+    if (sanitized.blendFunction) {
+      this.blendFunction = sanitized.blendFunction;
     }
 
-    if (json.images) {
-      for (let i = 0; i < json.images.length; i++) {
-        const image = json.images[i];
+    if (sanitized.images) {
+      for (let i = 0; i < sanitized.images.length; i++) {
+        const image = sanitized.images[i];
         if (i > this.images.length - 1) {
           this.addImage(image, params);
         } else {
           this.images[i].fromJSON(image, params);
         }
       }
-      this.mesh.makeCompatibleWith(this.images[0]);
+      if (this.images.length > 0) {
+        this.mesh.makeCompatibleWith(this.images[0]);
+      }
     }
 
-    if (json.triangles) {
-      for (const triangle of json.triangles.slice(this.triangles.length)) {
+    if (sanitized.triangles) {
+      for (const triangle of sanitized.triangles.slice(this.triangles.length)) {
         this.addTriangle(triangle[0], triangle[1], triangle[2]);
       }
     }

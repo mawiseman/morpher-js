@@ -66,11 +66,13 @@
 - [x] Add comprehensive tests for event system
 
 ### Security Fixes
-- [ ] Remove `eval()` usage for custom blend functions
-- [ ] Implement Function constructor as safer alternative
-- [ ] Or create predefined function registry
-- [ ] Add input validation for custom functions
-- [ ] Sanitize JSON input
+- [x] No `eval()` usage in codebase (verified)
+- [x] Create predefined function registries (blend and easing)
+- [x] Add function validation (parameter count, type checking)
+- [x] Add input validation for custom functions
+- [x] Sanitize JSON input (remove dangerous URLs, validate numbers)
+- [x] Add safe function setter methods (setBlendFunction, setFinalTouchFunction)
+- [x] Validate all user-supplied functions
 
 ### Browser Compatibility
 - [x] Remove Chrome detection hack (triangle.js:168)

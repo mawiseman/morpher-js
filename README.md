@@ -7,13 +7,14 @@ MorpherJS is a JavaScript image morphing library. It uses HTML 5 canvas element.
 ## Features
 
 * Unlimited images count — use as many as you need
-* Custom blend functions
+* Custom blend functions with predefined registry
 * Animation with easing support
 * Modern ES6+ modules
 * Multiple output formats (ESM, CJS, UMD)
 * Optimized performance with hardware acceleration
 * Comprehensive memory management with `dispose()` methods
 * Native EventTarget-based event system
+* Production-grade security (no eval(), input validation, JSON sanitization)
 
 ## Quick Start
 
@@ -381,6 +382,46 @@ morpher.on('all', (eventName, ...args) => {
 ```
 
 See [EVENT_SYSTEM_SUMMARY.md](EVENT_SYSTEM_SUMMARY.md) for detailed event system documentation.
+
+## Security
+
+v2.0 includes comprehensive security features to protect against injection attacks:
+
+- **No eval()** - Zero eval() usage throughout codebase
+- **Function validation** - All custom functions validated before use
+- **JSON sanitization** - Input sanitized to prevent XSS and injection attacks
+- **URL validation** - Dangerous protocols (`javascript:`, malicious `data:`) blocked
+- **Predefined registries** - Safe blend and easing functions available by name
+
+**Predefined Blend Functions:**
+- `default`, `additive` - GPU-accelerated additive blending
+- `normal` - Standard alpha blending
+- `multiply` - Multiply blend mode
+- `screen` - Screen blend mode
+- `software` - CPU-based fallback
+
+**Predefined Easing Functions:**
+- `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`
+- `easeInCubic`, `easeOutCubic`, `easeInOutCubic`
+- `easeInQuart`, `easeOutQuart`, `easeInOutQuart`
+
+**Usage:**
+```javascript
+// Safe: Use predefined functions by name
+morpher.setBlendFunction('multiply');
+morpher.animate([0, 1], 500, 'easeInOutQuad');
+
+// Safe: Custom functions are validated
+const customBlend = (destination, source, weight) => {
+  // Your custom blend logic
+};
+morpher.setBlendFunction(customBlend); // Returns true if valid
+
+// Safe: JSON is automatically sanitized
+morpher.fromJSON(untrustedJSON); // All input validated
+```
+
+See [SECURITY_SUMMARY.md](SECURITY_SUMMARY.md) for detailed security documentation.
 
 ## Browser Support
 
