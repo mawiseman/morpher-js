@@ -99,7 +99,10 @@ npm run dev
 - `BUILD_MIGRATION.md` - Build system migration guide
 - `MIGRATION_STATUS.md` - This file
 - `src/README.md` - Source directory guide
+- `examples/README.md` - Examples documentation
+- `examples/basic/README.md` - Basic demo documentation
 
 ### Directories
-- `src/` - Future home of ES6+ source files
+- `src/` - ES6+ source files (complete)
+- `examples/` - Interactive examples and demos
 - `public/` - Static assets for Vite dev server

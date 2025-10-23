@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MorpherJS Demos - v2.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+    }
+
+    h2 {
+      color: #667eea;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      font-size: 1.8em;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    section {
+      margin-bottom: 60px;
+    }
+
+    .demo {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .preview {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .preview canvas {
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      background: white;
+    }
+
+    .controls {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .controls label {
+      display: block;
+      margin: 15px 0;
+    }
+
+    .controls input[type="range"] {
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    .controls input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      background: #667eea;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #5568d3;
+    }
+
+    button .icon {
+      display: inline-block;
+      margin-right: 5px;
+    }
+
+    pre {
+      background: #282c34;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    code {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    p {
+      margin: 15px 0;
+    }
+
+    a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .clear {
+      clear: both;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      background: #5568d3;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../../" class="back-link">← Back to Examples</a>
+
+    <h1>MorpherJS Demos</h1>
+    <p>
+      These demonstrations showcase the capabilities of MorpherJS v2.0, now fully migrated to ES6+ JavaScript.
+      All demos have been converted from the original to work with the modernized library.
+    </p>
+
+    <!-- Demo 1: Basic Setup -->
+    <section id="demo1-section">
+      <h2>1. Basic Setup</h2>
+      <p>
+        Use the GUI to setup images and meshes. Then simply create new Morpher object using JSON code exported from GUI.
+      </p>
+
+      <div class="demo" id="demo1">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <button data-action="reset" title="Reset">🔄 Reset</button>
+            <button data-action="play" title="Play">▶️ Play</button>
+            <input type="range" min="0" max="1" step="0.01" value="0">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo 2: Multiple Images -->
+    <section id="demo2-section">
+      <h2>2. Multiple Images, Different Sizes</h2>
+      <p>You can blend as many images as you like. Images don't need to have same dimensions.</p>
+      <p>
+        When morphing multiple images, the <code>set</code> function expects an array of factors - one factor for each image.
+        Keep in mind that in typical approach these factors should sum to 1.
+        If you exceed this number, you get oversized, overexposed image – this can be useful to create a bouncing effect.
+      </p>
+
+      <div class="demo" id="demo2">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <label>
+              <div>Red Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="1" name="parrot1">
+            </label>
+            <label>
+              <div>Green Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="0" name="parrot2">
+            </label>
+            <label>
+              <div>Blue Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="0" name="parrot3">
+            </label>
+            <p>
+              <label>
+                <input type="checkbox" name="limit" checked>
+                Restrict factor sum to 1
+              </label>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo 3: Easing -->
+    <section id="demo3-section">
+      <h2>3. Easing Functions</h2>
+      <p>
+        You can pass your own easing function to control animation timing. The demo includes a cubic ease-in-out,
+        an elastic bounce effect, and a custom stepwise function.
+      </p>
+
+      <div class="demo" id="demo3">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <button data-action="reset" title="Reset">🔄 Reset</button>
+            <button data-action="easeInOutCubic">▶️ Ease In Out Cubic</button>
+            <button data-action="easeOutElastic">▶️ Elastic Bounce</button>
+            <button data-action="custom">▶️ Custom Stepwise</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo 4: Blend & Final Touch -->
+    <section id="demo4-section">
+      <h2>4. Blend & Final Touch Functions</h2>
+      <p>You can define your own image blend rules. There are two functions that can be customized:</p>
+
+      <h3>Blend Function</h3>
+      <p>
+        Blend function's goal is to mix two images. It takes 3 arguments: destination canvas (on which the results should be drawn),
+        source canvas (which holds image that should be drawn) and weight — number between 0 (don't draw) and 1 (completely cover destination canvas with this image).
+      </p>
+
+      <h3>Final Touch Function</h3>
+      <p>
+        Final touch function is called after all images are blended into morpher's canvas.
+        It takes one argument — the resulting canvas — and can modify it in any way you need.
+      </p>
+
+      <div class="demo" id="demo4">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <button data-action="reset" title="Reset">🔄 Reset</button>
+            <button data-action="play" title="Play">▶️ Play</button>
+            <input type="range" min="0" max="1" step="0.01" value="0">
+            <label>
+              <input type="checkbox" name="blend">
+              Custom blend (glow effect)
+            </label>
+            <label>
+              <input type="checkbox" name="finalTouch">
+              Custom final touch (threshold)
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo 5: API Usage -->
+    <section id="demo5-section">
+      <h2>5. Defining Mesh with API</h2>
+      <p>
+        If you wish, you can use MorpherJS API to define images and meshes instead of
+        providing JSON configuration.
+      </p>
+
+      <div class="demo" id="demo5">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <label>
+              <div>Red Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="1" name="parrot1">
+            </label>
+            <label>
+              <div>Green Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="0" name="parrot2">
+            </label>
+            <label>
+              <div>Black Circle</div>
+              <input type="range" min="0" max="1" step="0.01" value="0" name="circle">
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script type="module" src="./demos.js"></script>
+</body>
+</html>

@@ -3,79 +3,263 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MorpherJS Demo</title>
+  <title>MorpherJS v2.0 - Examples</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    h1 {
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
       color: #333;
     }
-    #canvas-container {
-      margin: 20px 0;
-      border: 1px solid #ddd;
-      padding: 10px;
-      display: inline-block;
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
     }
-    canvas {
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 50px;
+    }
+
+    h1 {
+      font-size: 3.5em;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .tagline {
+      font-size: 1.3em;
+      opacity: 0.95;
+      margin-bottom: 10px;
+    }
+
+    .version {
+      display: inline-block;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 0.9em;
+      margin-top: 10px;
+    }
+
+    .intro {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      margin-bottom: 40px;
+    }
+
+    .intro h2 {
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .intro p {
+      line-height: 1.8;
+      color: #555;
+      margin-bottom: 10px;
+    }
+
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .example-card {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
       display: block;
     }
-    .controls {
-      margin: 20px 0;
+
+    .example-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 50px rgba(0,0,0,0.3);
     }
-    button {
+
+    .example-card h3 {
+      color: #667eea;
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .example-icon {
+      font-size: 1.8em;
+    }
+
+    .example-card p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .example-card .features {
+      list-style: none;
+      margin-top: 15px;
+    }
+
+    .example-card .features li {
+      padding: 6px 0;
+      color: #888;
+      font-size: 0.9em;
+    }
+
+    .example-card .features li:before {
+      content: "✓ ";
+      color: #4caf50;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      margin-top: 15px;
       padding: 10px 20px;
-      margin: 5px;
-      font-size: 14px;
-      cursor: pointer;
+      background: #667eea;
+      color: white;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: background 0.3s ease;
     }
-    .note {
-      background: #fffbcc;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
+
+    .example-card:hover .cta-button {
+      background: #5568d3;
+    }
+
+    .footer {
+      text-align: center;
+      color: white;
+      padding: 30px;
+      opacity: 0.9;
+    }
+
+    .footer a {
+      color: white;
+      text-decoration: underline;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #4caf50;
+      color: white;
+      border-radius: 12px;
+      font-size: 0.75em;
+      font-weight: 500;
+      text-transform: uppercase;
+      margin-left: 10px;
+    }
+
+    .coming-soon {
+      background: #ff9800;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2.5em;
+      }
+
+      .examples-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>MorpherJS v2.0 Development</h1>
+  <div class="container">
+    <header>
+      <h1>MorpherJS</h1>
+      <p class="tagline">Modern ES6+ Image Morphing Library</p>
+      <div class="version">Version 2.0</div>
+    </header>
 
-  <div class="note">
-    <strong>Note:</strong> This is the development version using the new Vite build system.
-    The library is currently being migrated from CoffeeScript to ES6+.
-    <br><br>
-    To run the old Middleman version, use: <code>bundle exec middleman server</code>
+    <div class="intro">
+      <h2>Welcome to MorpherJS v2.0</h2>
+      <p>
+        MorpherJS is a powerful JavaScript library for creating smooth morphing effects between multiple images
+        using HTML5 Canvas and mesh deformation techniques.
+      </p>
+      <p>
+        <strong>New in v2.0:</strong> Complete rewrite in modern ES6+ JavaScript, Vite build system,
+        multiple module formats (ESM, CJS, UMD), and significant performance improvements.
+      </p>
+    </div>
+
+    <h2 style="color: white; margin-bottom: 20px; font-size: 2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+      Examples & Demos
+    </h2>
+
+    <div class="examples-grid">
+      <a href="/examples/demos/" class="example-card">
+        <h3>
+          <span class="example-icon">🎭</span>
+          All Original Demos
+          <span class="status-badge">Ready</span>
+        </h3>
+        <p>
+          Complete collection of original MorpherJS demos, fully migrated to v2.0 with modern ES6+ JavaScript.
+        </p>
+        <ul class="features">
+          <li>5 comprehensive demonstrations</li>
+          <li>Real image morphing (plums, raspberries, parrots)</li>
+          <li>Custom easing & blend functions</li>
+          <li>API usage examples</li>
+        </ul>
+        <span class="cta-button">View Demos →</span>
+      </a>
+    </div>
+
+    <div class="intro">
+      <h2>Quick Start</h2>
+      <p>
+        <strong>Installation:</strong>
+      </p>
+      <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 10px 0;">npm install</pre>
+
+      <p style="margin-top: 15px;">
+        <strong>Run Development Server:</strong>
+      </p>
+      <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 10px 0;">npm run dev</pre>
+
+      <p style="margin-top: 15px;">
+        <strong>Build Library:</strong>
+      </p>
+      <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 10px 0;">npm run build</pre>
+    </div>
+
+    <footer class="footer">
+      <p>
+        <strong>MorpherJS v2.0</strong> - Modern ES6+ Image Morphing Library
+      </p>
+      <p style="margin-top: 10px;">
+        <a href="https://github.com/jembezmamy/morpher-js" target="_blank">GitHub</a> ·
+        <a href="/README.md" target="_blank">Documentation</a> ·
+        <a href="http://fruit-labour.nibynic.com/" target="_blank">Original Project</a>
+      </p>
+      <p style="margin-top: 15px; font-size: 0.9em;">
+        Original by Paweł Bator (2012) · v2.0 Modernization (2025) · MIT License
+      </p>
+    </footer>
   </div>
-
-  <div id="canvas-container">
-    <!-- Canvas will be inserted here by MorpherJS -->
-  </div>
-
-  <div class="controls">
-    <h3>Controls</h3>
-    <button id="animate-btn">Animate</button>
-    <button id="reset-btn">Reset</button>
-  </div>
-
-  <div class="info">
-    <h3>Status</h3>
-    <p id="status">Waiting for library migration...</p>
-  </div>
-
-  <!-- This will work once we migrate to ES6 modules -->
-  <!-- <script type="module" src="/src/index.js"></script> -->
-
-  <script>
-    // Placeholder for when the library is migrated
-    document.getElementById('status').textContent =
-      'Library not yet migrated. Please use the Middleman build for now.';
-
-    // Once migrated, this will become:
-    // import { Morpher } from '/src/index.js';
-    // const morpher = new Morpher({ ... });
-  </script>
 </body>
 </html>
