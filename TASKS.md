@@ -23,9 +23,9 @@
 
 ### Critical Performance Fixes
 - [x] Replace `@canvas.width = @canvas.width` with `ctx.clearRect()` (morpher.js:185)
-- [ ] Optimize `defaultBlendFunction` to use GPU acceleration (morpher.js:243-248)
-- [ ] Replace `globalCompositeOperation` with hardware-accelerated blending
-- [ ] Implement OffscreenCanvas for blend operations
+- [x] Optimize `defaultBlendFunction` to use GPU acceleration (morpher.js:460-478)
+- [x] Replace `globalCompositeOperation` with hardware-accelerated blending
+- [x] Implement OffscreenCanvas for blend operations (morpher.js:51-58)
 - [x] Replace `new Date().getTime()` with `performance.now()` (morpher.js:57, 230)
 - [x] Remove vendor prefixes for `requestAnimationFrame` (morpher.js:178)
 
@@ -173,11 +173,12 @@
 ## Performance Optimization Checklist
 
 - [x] Canvas clearing optimization (50-70% faster rendering)
-- [ ] GPU-accelerated blending (80-90% faster)
-- [ ] Memory leak fixes
-- [ ] Remove CoffeeScript compiler overhead (-100KB)
-- [ ] Remove Backbone/Underscore (-50KB)
-- [ ] Implement tree-shaking (-30-40%)
+- [x] GPU-accelerated blending (80-90% faster)
+- [x] OffscreenCanvas for better performance
+- [ ] Memory leak fixes (dispose methods)
+- [x] Remove CoffeeScript compiler overhead (-100KB)
+- [ ] Remove Backbone/Underscore (-50KB) (GUI modernization deferred)
+- [x] Implement tree-shaking (ES modules support)
 - [ ] Modern minification (-20-30% additional)
 - [ ] Lazy loading and code splitting
 - [ ] Image preloading and caching

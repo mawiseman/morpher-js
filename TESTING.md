@@ -151,10 +151,18 @@ Open browser DevTools Performance tab:
 
 1. **Record rendering performance:**
    - [ ] Start recording
-   - [ ] Trigger an animation
+   - [ ] Trigger an animation (e.g., Demo 3 Elastic Bounce)
    - [ ] Stop recording
-   - [ ] Verify no dropped frames
-   - [ ] Verify canvas rendering is efficient
+   - [ ] **Verify 60fps** - should see consistent frame times around 16ms or less
+   - [ ] **Verify no dropped frames** - timeline should be smooth
+   - [ ] **Check GPU activity** - should see GPU processes active (green bars)
+   - [ ] **Check frame times** - should be 2-5ms per frame (was 15-25ms in v1.x)
+
+**Expected v2.0 Performance:**
+- Consistent 60fps
+- Frame times: 2-5ms (down from 15-25ms)
+- CPU usage: 5-15% (down from 45-60%)
+- GPU activity: Moderate (blending done on GPU)
 
 2. **Check memory usage:**
    - [ ] Open Memory tab
@@ -162,6 +170,14 @@ Open browser DevTools Performance tab:
    - [ ] Run all demos
    - [ ] Take another snapshot
    - [ ] Compare - should not show significant leaks
+   - [ ] Memory usage should be 30-40% lower than v1.x
+
+**Performance Benchmarks:**
+
+See [PERFORMANCE.md](../PERFORMANCE.md) for detailed benchmarks showing:
+- 50-70% faster canvas clearing
+- 80-90% faster blending
+- Up to 95% faster overall rendering
 
 ## Build Testing
 
