@@ -11,15 +11,15 @@
 - [x] Configure build outputs (ESM, CJS, UMD)
 
 ### Language Migration
-- [ ] Migrate `morpher.js.coffee` to ES6+ JavaScript
-- [ ] Migrate `image.js.coffee` to ES6+ JavaScript
-- [ ] Migrate `triangle.js.coffee` to ES6+ JavaScript
-- [ ] Migrate `mesh.js.coffee` to ES6+ JavaScript
-- [ ] Migrate `point.js.coffee` to ES6+ JavaScript
-- [ ] Migrate `_event_dispatcher.js.coffee` to ES6+ JavaScript
-- [ ] Migrate `_matrix.js.coffee` to ES6+ JavaScript
-- [ ] Migrate all GUI CoffeeScript files to JavaScript
-- [ ] Remove all CoffeeScript dependencies
+- [x] Migrate `morpher.js.coffee` to ES6+ JavaScript
+- [x] Migrate `image.js.coffee` to ES6+ JavaScript
+- [x] Migrate `triangle.js.coffee` to ES6+ JavaScript
+- [x] Migrate `mesh.js.coffee` to ES6+ JavaScript
+- [x] Migrate `point.js.coffee` to ES6+ JavaScript
+- [x] Migrate `_event_dispatcher.js.coffee` to ES6+ JavaScript
+- [x] Migrate `_matrix.js.coffee` to ES6+ JavaScript
+- [ ] Migrate all GUI CoffeeScript files to JavaScript (skipped - GUI modernization deferred)
+- [x] Remove all CoffeeScript dependencies (for core library)
 
 ### Critical Performance Fixes
 - [x] Replace `@canvas.width = @canvas.width` with `ctx.clearRect()` (morpher.js:185)
