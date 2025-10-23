@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MorpherJS Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    #canvas-container {
+      margin: 20px 0;
+      border: 1px solid #ddd;
+      padding: 10px;
+      display: inline-block;
+    }
+    canvas {
+      display: block;
+    }
+    .controls {
+      margin: 20px 0;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .note {
+      background: #fffbcc;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>MorpherJS v2.0 Development</h1>
+
+  <div class="note">
+    <strong>Note:</strong> This is the development version using the new Vite build system.
+    The library is currently being migrated from CoffeeScript to ES6+.
+    <br><br>
+    To run the old Middleman version, use: <code>bundle exec middleman server</code>
+  </div>
+
+  <div id="canvas-container">
+    <!-- Canvas will be inserted here by MorpherJS -->
+  </div>
+
+  <div class="controls">
+    <h3>Controls</h3>
+    <button id="animate-btn">Animate</button>
+    <button id="reset-btn">Reset</button>
+  </div>
+
+  <div class="info">
+    <h3>Status</h3>
+    <p id="status">Waiting for library migration...</p>
+  </div>
+
+  <!-- This will work once we migrate to ES6 modules -->
+  <!-- <script type="module" src="/src/index.js"></script> -->
+
+  <script>
+    // Placeholder for when the library is migrated
+    document.getElementById('status').textContent =
+      'Library not yet migrated. Please use the Middleman build for now.';
+
+    // Once migrated, this will become:
+    // import { Morpher } from '/src/index.js';
+    // const morpher = new Morpher({ ... });
+  </script>
+</body>
+</html>

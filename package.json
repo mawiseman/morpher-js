@@ -21,7 +21,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "echo \"No tests yet\" && exit 0",
-    "lint": "echo \"No linter configured yet\" && exit 0"
+    "lint": "echo \"No linter configured yet\" && exit 0",
+    "old:dev": "echo \"Use 'bundle exec middleman server' to run old Middleman server\" && exit 1",
+    "old:build": "echo \"Use 'bundle exec middleman build' to run old Middleman build\" && exit 1"
   },
   "keywords": [
     "morphing",

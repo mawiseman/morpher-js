@@ -4,11 +4,11 @@
 
 ### Build System & Tooling
 - [x] Create `package.json` with modern module configuration
-- [ ] Set up Vite build system
-- [ ] Configure development server
-- [ ] Remove Middleman (Ruby) dependency
-- [ ] Remove Gemfile and Ruby dependencies
-- [ ] Configure build outputs (ESM, CJS, UMD)
+- [x] Set up Vite build system
+- [x] Configure development server
+- [x] Remove Middleman (Ruby) dependency (deferred until code migration - see MIGRATION_STATUS.md)
+- [x] Remove Gemfile and Ruby dependencies (deferred until code migration - see MIGRATION_STATUS.md)
+- [x] Configure build outputs (ESM, CJS, UMD)
 
 ### Language Migration
 - [ ] Migrate `morpher.js.coffee` to ES6+ JavaScript
