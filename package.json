@@ -1,0 +1,51 @@
+{
+  "name": "morpher-js",
+  "version": "2.0.0",
+  "description": "JavaScript image morphing library using HTML5 Canvas",
+  "type": "module",
+  "main": "./dist/morpher.cjs",
+  "module": "./dist/morpher.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/morpher.js",
+      "require": "./dist/morpher.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "echo \"No tests yet\" && exit 0",
+    "lint": "echo \"No linter configured yet\" && exit 0"
+  },
+  "keywords": [
+    "morphing",
+    "canvas",
+    "image",
+    "animation",
+    "blend",
+    "mesh",
+    "triangle"
+  ],
+  "author": "Paweł Bator",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jembezmamy/morpher-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jembezmamy/morpher-js/issues"
+  },
+  "homepage": "http://jembezmamy.github.io/morpher-js/",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

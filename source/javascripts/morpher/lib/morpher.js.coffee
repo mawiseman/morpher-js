@@ -54,7 +54,7 @@ class MorpherJS.Morpher extends MorpherJS.EventDispatcher
     for img in @images
       @state0.push img.getWeight()
     @state1 = weights
-    @t0 = new Date().getTime()
+    @t0 = performance.now()
     @duration = duration
     @easingFunction = easing
     @trigger "animation:start", this
@@ -175,14 +175,13 @@ class MorpherJS.Morpher extends MorpherJS.EventDispatcher
 
   draw: =>
     return if @requestID?
-    requestFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame || window.webkitRequestAnimationFrame
-    if requestFrame?
-      @requestID = requestFrame @drawNow
+    if window.requestAnimationFrame?
+      @requestID = window.requestAnimationFrame @drawNow
     else
       @drawNow()
 
   drawNow: =>
-    @canvas.width = @canvas.width
+    @ctx.clearRect(0, 0, @canvas.width, @canvas.height)
     @updateCanvasSize()
     @animationStep()
     @updateMesh()
@@ -191,7 +190,7 @@ class MorpherJS.Morpher extends MorpherJS.EventDispatcher
       sortedImages = @images.slice().sort (a, b) ->
         b.weight - a.weight
       for image in sortedImages
-        @tmpCanvas.width = @tmpCanvas.width
+        @tmpCtx.clearRect(0, 0, @tmpCanvas.width, @tmpCanvas.height)
         image.draw @tmpCtx, @mesh
         blend @canvas, @tmpCanvas, image.weight
       @finalTouchFunction(@canvas) if @finalTouchFunction?
@@ -227,7 +226,7 @@ class MorpherJS.Morpher extends MorpherJS.EventDispatcher
 
   animationStep: =>
     if @t0?
-      t = new Date().getTime() - @t0
+      t = performance.now() - @t0
       if t >= @duration
         state = @state1
         @state0 = @state1 = @t0 = null
