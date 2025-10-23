@@ -170,8 +170,22 @@
       margin-left: 10px;
     }
 
+    .status-badge:has(+ .status-badge) {
+      background: #667eea;
+    }
+
     .coming-soon {
       background: #ff9800;
+    }
+
+    .new-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
     }
 
     @media (max-width: 768px) {
@@ -210,6 +224,25 @@
     </h2>
 
     <div class="examples-grid">
+      <a href="/gui.html" class="example-card">
+        <h3>
+          <span class="example-icon">🎨</span>
+          GUI Editor
+          <span class="status-badge new-badge">New</span>
+        </h3>
+        <p>
+          Visual editor for creating morphing projects. Build meshes, add images, and export configurations - all in your browser.
+        </p>
+        <ul class="features">
+          <li>Multi-project management</li>
+          <li>Visual mesh editing with drag & drop</li>
+          <li>Real-time morphing preview</li>
+          <li>Custom blend functions</li>
+          <li>Export to JSON</li>
+        </ul>
+        <span class="cta-button">Open Editor →</span>
+      </a>
+
       <a href="/examples/demos/" class="example-card">
         <h3>
           <span class="example-icon">🎭</span>
