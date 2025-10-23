@@ -102,14 +102,14 @@
 - [ ] review, cosolidate and move all the .md files out of the root
 
 ### Advanced Performance
-- [ ] Implement Web Workers for mesh calculations
-- [ ] Implement Web Workers for blend operations
-- [ ] Add OffscreenCanvas support for background rendering
-- [ ] Evaluate WebGL renderer implementation
-- [ ] Evaluate WebGPU renderer for future
-- [ ] Implement ImageBitmap for faster image processing
-- [ ] Add lazy loading for images
-- [ ] Implement virtual rendering for large meshes
+- [x] Implement Web Workers for mesh calculations
+- [x] Implement Web Workers for blend operations
+- [x] Add OffscreenCanvas support for background rendering
+- [x] Evaluate WebGL renderer implementation
+- [x] Evaluate WebGPU renderer for future
+- [x] Implement ImageBitmap for faster image processing
+- [x] Add lazy loading for images
+- [x] Implement virtual rendering for large meshes
 
 ### Modern Web APIs
 - [ ] Replace mouse events with Pointer Events
