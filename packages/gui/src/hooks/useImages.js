@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { Image as MorpherImage } from '../../index.js';
+import { Image as MorpherImage } from 'morpher-js';
 import { LocalStorageManager } from '../utils/storage.js';
 
 /**

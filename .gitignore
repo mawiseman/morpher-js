@@ -7,11 +7,14 @@ pnpm-debug.log*
 
 # Vite build output
 dist
+packages/*/dist
 *.local
 
 # Test files (keep tests/ directory but ignore output)
 tests/*.log
 tests/coverage
+packages/*/tests/*.log
+packages/*/tests/coverage
 
 # Editor directories
 .vscode/*

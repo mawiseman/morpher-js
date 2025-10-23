@@ -1,9 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [react()],
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.js'),
@@ -22,18 +20,16 @@ export default defineConfig({
         // Global variables to use in UMD build for externalized deps
         globals: {},
         // Use named exports to avoid warning
-        exports: 'named'
+        exports: 'named',
+        manualChunks: undefined
       }
     },
     sourcemap: true,
     minify: 'terser',
     target: 'es2015'
   },
-  server: {
-    port: 3000,
-    open: true
-  },
-  // For development/demo page
-  root: './',
-  publicDir: 'examples'
+  test: {
+    environment: 'jsdom',
+    globals: true
+  }
 });

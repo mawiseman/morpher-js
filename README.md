@@ -2,7 +2,7 @@
 
 MorpherJS is a JavaScript image morphing library. It uses HTML 5 canvas element.
 
-**Version 2.0** - Complete rewrite in modern ES6+ JavaScript with Vite build system.
+**Version 2.0** - Complete rewrite in modern ES6+ JavaScript with Vite build system and monorepo structure.
 
 ## Features
 
@@ -16,6 +16,20 @@ MorpherJS is a JavaScript image morphing library. It uses HTML 5 canvas element.
 * Native EventTarget-based event system
 * Production-grade security (no eval(), input validation, JSON sanitization)
 
+## Monorepo Structure
+
+This repository is organized as a monorepo containing three packages:
+
+```
+morpher-js/
+├── packages/
+│   ├── morpher/          # Core morphing library (publishable to npm)
+│   ├── gui/              # React-based visual editor
+│   └── demos/            # Example demonstrations
+├── docs/                 # Shared documentation
+└── scripts/              # Build utilities
+```
+
 ## Quick Start
 
 ### Installation
@@ -24,29 +38,52 @@ MorpherJS is a JavaScript image morphing library. It uses HTML 5 canvas element.
 npm install
 ```
 
-### Running Examples
+### Running the Project
 
 ```bash
-npm run dev
+# Run all development servers
+npm run dev:lib      # Library (watch mode)
+npm run dev:demos    # Demos site (localhost:3000)
+npm run dev:gui      # GUI editor (localhost:3001)
+
+# Build all packages
+npm run build        # Build everything
+npm run build:lib    # Build library only
+npm run build:demos  # Build demos only
+npm run build:gui    # Build GUI only
 ```
 
-Open `http://localhost:3000` to see the examples launcher.
+### Using the Library
 
-**Available Examples:**
-- **All Original Demos** ([examples/demos/](examples/demos/)) - Complete collection of 5 original MorpherJS demonstrations
+Install from npm (once published):
 
-See [examples/README.md](examples/README.md) for complete examples documentation.
+```bash
+npm install morpher-js
+```
+
+Or use locally from the monorepo:
+
+```bash
+cd packages/morpher
+npm link
+```
+
+**Available Applications:**
+- **Demos** ([packages/demos/](packages/demos/)) - 5 interactive demonstrations
+- **GUI Editor** ([packages/gui/](packages/gui/)) - Visual mesh editor with project management
+
+See package-specific READMEs for more details.
 
 ### Building the Library
 
 ```bash
-npm run build
+npm run build:lib
 ```
 
-This creates:
-- `dist/morpher.js` - ES module
-- `dist/morpher.cjs` - CommonJS
-- `dist/morpher.umd.js` - UMD (browser global)
+This creates in `packages/morpher/dist/`:
+- `morpher.js` - ES module
+- `morpher.cjs` - CommonJS
+- `morpher.umd.js` - UMD (browser global)
 
 ## Usage
 
@@ -281,42 +318,105 @@ See [docs/MIGRATION.md](docs/MIGRATION.md) for detailed migration guide.
 
 ## Development
 
-### Project Structure
+### Monorepo Structure
 
 ```
 morpher-js/
-├── src/                  # ES6+ source files
-│   ├── index.js         # Main entry point
-│   ├── morpher.js       # Main Morpher class
-│   ├── image.js         # Image class
-│   ├── triangle.js      # Triangle class
-│   ├── mesh.js          # Mesh class
-│   ├── point.js         # Point class
-│   ├── matrix.js        # Matrix transformations
-│   └── event-dispatcher.js  # Event system
-├── examples/            # Example demonstrations
-│   ├── demos/          # All original demos (5 complete examples)
-│   └── README.md       # Examples documentation
-├── tests/              # Test files
-│   ├── test-event-dispatcher.js
-│   └── test-security.js
-├── dist/               # Built files (generated)
-├── index.html          # Examples launcher
-├── package.json        # Node dependencies
-└── vite.config.js      # Build configuration
+├── packages/
+│   ├── morpher/                    # Core library package
+│   │   ├── src/                   # ES6+ source files
+│   │   │   ├── index.js          # Main entry point
+│   │   │   ├── morpher.js        # Morpher class
+│   │   │   ├── image.js          # Image class
+│   │   │   ├── mesh.js           # Mesh class
+│   │   │   ├── triangle.js       # Triangle class
+│   │   │   ├── point.js          # Point class
+│   │   │   ├── matrix.js         # Matrix transformations
+│   │   │   ├── event-dispatcher.js  # Event system
+│   │   │   ├── image-loader.js   # Advanced image loading
+│   │   │   ├── virtual-renderer.js  # Virtual rendering
+│   │   │   ├── worker-manager.js # Web workers
+│   │   │   └── workers/          # Worker scripts
+│   │   ├── tests/                # Test files
+│   │   ├── dist/                 # Built files (generated)
+│   │   ├── package.json          # Library dependencies
+│   │   ├── vite.config.js        # Library build config
+│   │   └── README.md             # Library documentation
+│   │
+│   ├── demos/                     # Demos package
+│   │   ├── src/
+│   │   │   ├── demos/            # Demo HTML/JS files
+│   │   │   └── images/           # Demo assets
+│   │   ├── index.html            # Landing page
+│   │   ├── package.json
+│   │   └── vite.config.js        # Multi-page build
+│   │
+│   └── gui/                       # GUI Editor package
+│       ├── src/
+│       │   ├── main.jsx          # React entry point
+│       │   ├── App.jsx
+│       │   ├── components/       # React components
+│       │   ├── hooks/            # Custom hooks
+│       │   ├── styles/           # CSS
+│       │   └── utils/            # Utilities
+│       ├── index.html
+│       ├── package.json
+│       └── vite.config.js        # SPA build config
+│
+├── docs/                          # Shared documentation
+│   ├── MIGRATION.md
+│   ├── ARCHITECTURE.md
+│   ├── PERFORMANCE.md
+│   └── PERFORMANCE_FEATURES.md
+│
+├── scripts/                       # Build utilities
+│   └── clean.js                  # Clean build artifacts
+│
+├── package.json                   # Root workspace config
+├── CHANGELOG.md                   # Version history
+├── CONTRIBUTING.md                # Contributor guide
+└── README.md                      # This file
 ```
 
 ### Scripts
 
 ```bash
-npm run dev      # Start dev server
-npm run build    # Build library
-npm run preview  # Preview production build
+# Development
+npm run dev:lib      # Library (watch mode)
+npm run dev:demos    # Demos (localhost:3000)
+npm run dev:gui      # GUI (localhost:3001)
+
+# Building
+npm run build        # Build all packages
+npm run build:lib    # Build library only
+npm run build:demos  # Build demos only
+npm run build:gui    # Build GUI only
+
+# Utilities
+npm run clean        # Clean all dist/ folders
+npm test             # Run tests (all packages)
 ```
+
+### Working with the Monorepo
+
+The repository uses **npm workspaces** for package management. All packages are automatically linked together during `npm install`.
+
+**Adding dependencies:**
+```bash
+# Add to root (shared dev dependencies)
+npm install -D vite
+
+# Add to specific package
+npm install react -w @morpher-js/gui
+npm install lodash -w morpher-js
+```
+
+**Testing changes across packages:**
+When you modify the core library, the demos and GUI automatically use the local version (no need to rebuild or npm link).
 
 ### Testing
 
-Currently uses manual testing via the demo page.
+Currently uses manual testing via the demos.
 
 Automated tests coming soon.
 
@@ -516,11 +616,11 @@ Tested on Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
 - **[docs/WEBGL_RENDERER.md](docs/WEBGL_RENDERER.md)** - WebGL renderer implementation guide (planned)
 - **[docs/WEBGPU_RENDERER.md](docs/WEBGPU_RENDERER.md)** - WebGPU renderer roadmap (future)
 
-### Component Documentation
+### Package Documentation
 
-- **[src/README.md](src/README.md)** - Source code overview
-- **[src/gui/README.md](src/gui/README.md)** - React GUI editor documentation
-- **[examples/README.md](examples/README.md)** - Examples and demos overview
+- **[packages/morpher/README.md](packages/morpher/README.md)** - Core library documentation
+- **[packages/gui/README.md](packages/gui/README.md)** - GUI editor documentation
+- **[packages/demos/README.md](packages/demos/README.md)** - Demos overview
 
 ## License
 

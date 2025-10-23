@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Morpher, Image as MorpherImage } from '../../index.js';
+import { Morpher, Image as MorpherImage } from 'morpher-js';
 import { LocalStorageManager, generateRandomColor } from '../utils/storage.js';
 
 const projectsStorage = new LocalStorageManager('Projects');

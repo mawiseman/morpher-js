@@ -1,29 +1,23 @@
 {
-  "name": "morpher-js",
+  "name": "morpher-js-monorepo",
   "version": "2.0.0",
-  "description": "JavaScript image morphing library using HTML5 Canvas",
+  "description": "JavaScript image morphing library using HTML5 Canvas - Monorepo",
+  "private": true,
   "type": "module",
-  "main": "./dist/morpher.cjs",
-  "module": "./dist/morpher.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/morpher.js",
-      "require": "./dist/morpher.cjs",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "files": [
-    "dist"
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "echo \"No tests yet\" && exit 0",
-    "lint": "echo \"No linter configured yet\" && exit 0",
-    "old:dev": "echo \"Use 'bundle exec middleman server' to run old Middleman server\" && exit 1",
-    "old:build": "echo \"Use 'bundle exec middleman build' to run old Middleman build\" && exit 1"
+    "build": "npm run build --workspaces --if-present",
+    "build:lib": "npm run build -w morpher-js",
+    "build:gui": "npm run build -w @morpher-js/gui",
+    "build:demos": "npm run build -w @morpher-js/demos",
+    "dev:lib": "npm run dev -w morpher-js",
+    "dev:gui": "npm run dev -w @morpher-js/gui",
+    "dev:demos": "npm run dev -w @morpher-js/demos",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "node scripts/clean.js",
+    "lint": "npm run lint --workspaces --if-present"
   },
   "keywords": [
     "morphing",
@@ -51,9 +45,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
   }
 }
