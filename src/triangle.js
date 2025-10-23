@@ -28,9 +28,13 @@ export class Triangle extends EventDispatcher {
     this.p2 = p2;
     this.p3 = p3;
 
-    this.p1.on('remove', this.remove.bind(this));
-    this.p2.on('remove', this.remove.bind(this));
-    this.p3.on('remove', this.remove.bind(this));
+    // Bind method that is used as callback
+    this.remove = this.remove.bind(this);
+
+    // Use pre-bound method
+    this.p1.on('remove', this.remove);
+    this.p2.on('remove', this.remove);
+    this.p3.on('remove', this.remove);
   }
 
   // Public Methods
@@ -158,20 +162,26 @@ export class Triangle extends EventDispatcher {
 
   /**
    * Calculate offset point for edge smoothing
+   *
+   * Applies a small offset to triangle edges to prevent gaps between triangles
+   * during rendering. Modern browsers handle clipping well, so a minimal offset
+   * is sufficient.
+   *
    * @param {Point} p1 - First point
    * @param {Point} p2 - Second point
-   * @param {number} [distance=0.7] - Offset distance
+   * @param {number} [distance=0.5] - Offset distance (reduced from 0.7 for modern browsers)
    * @returns {Object} Offset point {x, y}
    */
-  offset(p1, p2, distance = 0.7) {
-    // Disable offset in Chrome (not the best solution, but better than nothing)
-    if (window.chrome) {
-      distance = 0;
-    }
-
+  offset(p1, p2, distance = 0.5) {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
-    const length = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    // Avoid division by zero for degenerate triangles
+    if (length === 0) {
+      return { x: p1.x, y: p1.y };
+    }
+
     const dx2 = (dx * distance) / length;
     const dy2 = (dy * distance) / length;
 

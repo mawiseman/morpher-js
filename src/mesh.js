@@ -29,6 +29,11 @@ export class Mesh extends EventDispatcher {
     super();
     this.points = [];
     this.triangles = [];
+
+    // Bind methods that are used as callbacks
+    this.changeHandler = this.changeHandler.bind(this);
+    this.removePoint = this.removePoint.bind(this);
+    this.removeTriangle = this.removeTriangle.bind(this);
   }
 
   // Bounds
@@ -102,8 +107,9 @@ export class Mesh extends EventDispatcher {
       pointParams = null;
     }
 
-    point.on('change', this.changeHandler.bind(this));
-    point.on('remove', this.removePoint.bind(this));
+    // Use pre-bound methods
+    point.on('change', this.changeHandler);
+    point.on('remove', this.removePoint);
 
     this.points.push(point);
     this.refreshBounds();
@@ -396,7 +402,8 @@ export class Mesh extends EventDispatcher {
     if (!this.points[p1] || !this.points[p2] || !this.points[p3]) return;
 
     const triangle = new Triangle(this.points[p1], this.points[p2], this.points[p3]);
-    triangle.on('remove', this.removeTriangle.bind(this));
+    // Use pre-bound method
+    triangle.on('remove', this.removeTriangle);
     this.triangles.push(triangle);
     this.trigger('triangle:add', this, p1, p2, p3, triangle);
   }
@@ -418,7 +425,8 @@ export class Mesh extends EventDispatcher {
 
     if (i !== undefined && i !== -1) {
       this.triangles.splice(i, 1);
-      triangle.off('remove', this.removeTriangle.bind(this));
+      // Use pre-bound method
+      triangle.off('remove', this.removeTriangle);
       triangle.remove();
       if (!params.silent) {
         this.trigger('triangle:remove', this, triangle, i);

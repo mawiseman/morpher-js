@@ -40,11 +40,12 @@
 ## Phase 2: Core Improvements
 
 ### Code Quality
-- [ ] Remove global namespace pollution (`window.Morpher`)
-- [ ] Implement ES module exports
-- [ ] Replace fat arrow functions with appropriate binding
-- [ ] Add proper method binding in constructors
-- [ ] Optimize class structure for performance
+- [x] Remove global namespace pollution (`window.Morpher`)
+- [x] Implement ES module exports
+- [x] Replace fat arrow functions with appropriate binding
+- [x] Add proper method binding in constructors
+- [x] Optimize class structure for performance
+- [x] Remove Chrome detection hack (triangle.js)
 
 ### Memory Management
 - [ ] Implement `dispose()` method for Morpher class
@@ -71,11 +72,11 @@
 - [ ] Sanitize JSON input
 
 ### Browser Compatibility
-- [ ] Remove Chrome detection hack (triangle.js:103)
-- [ ] Implement proper feature detection
-- [ ] Remove all browser-specific workarounds
-- [ ] Add proper fallbacks for older browsers
-- [ ] Document minimum browser requirements
+- [x] Remove Chrome detection hack (triangle.js:168)
+- [x] Implement proper feature detection (OffscreenCanvas)
+- [x] Remove all browser-specific workarounds
+- [x] Add proper fallbacks for older browsers (OffscreenCanvas fallback)
+- [x] Document minimum browser requirements (in README.md)
 
 ---
 

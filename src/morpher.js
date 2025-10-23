@@ -44,6 +44,17 @@ export class Morpher extends EventDispatcher {
     this.triangles = [];
     this.mesh = new Mesh();
 
+    // Bind methods that are used as callbacks
+    // This ensures consistent function identity for adding/removing listeners
+    this.drawNow = this.drawNow.bind(this);
+    this.loadHandler = this.loadHandler.bind(this);
+    this.changeHandler = this.changeHandler.bind(this);
+    this.addPointHandler = this.addPointHandler.bind(this);
+    this.removePointHandler = this.removePointHandler.bind(this);
+    this.addTriangleHandler = this.addTriangleHandler.bind(this);
+    this.removeTriangleHandler = this.removeTriangleHandler.bind(this);
+    this.removeImage = this.removeImage.bind(this);
+
     this.setCanvas(document.createElement('canvas'));
 
     // Use OffscreenCanvas for tmpCanvas if available (better performance)
@@ -147,8 +158,9 @@ export class Morpher extends EventDispatcher {
 
     this.images.push(image);
 
+    // Attach event listeners using pre-bound methods
     for (const [event, handler] of Object.entries(this.imageEvents)) {
-      image.on(event, this[handler].bind(this));
+      image.on(event, this[handler]);
     }
 
     this.loadHandler();
@@ -165,8 +177,9 @@ export class Morpher extends EventDispatcher {
   removeImage(image) {
     const i = this.images.indexOf(image);
 
+    // Remove event listeners using pre-bound methods
     for (const [event, handler] of Object.entries(this.imageEvents)) {
-      image.off(event, this[handler].bind(this));
+      image.off(event, this[handler]);
     }
 
     if (i !== -1) {
@@ -339,7 +352,8 @@ export class Morpher extends EventDispatcher {
     if (this.requestID) return;
 
     if (window.requestAnimationFrame) {
-      this.requestID = window.requestAnimationFrame(this.drawNow.bind(this));
+      // Use pre-bound drawNow method (bound in constructor)
+      this.requestID = window.requestAnimationFrame(this.drawNow);
     } else {
       this.drawNow();
     }

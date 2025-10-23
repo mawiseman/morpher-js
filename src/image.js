@@ -27,12 +27,17 @@ export class Image extends EventDispatcher {
   constructor(json = {}) {
     super();
 
+    // Bind methods that are used as callbacks
+    this.loadHandler = this.loadHandler.bind(this);
+    this.propagateMeshEvent = this.propagateMeshEvent.bind(this);
+    this.refreshSource = this.refreshSource.bind(this);
+
     this.setImage(new window.Image());
     this.source = document.createElement('canvas');
 
     this.mesh = new Mesh();
-    this.mesh.on('all', this.propagateMeshEvent.bind(this));
-    this.mesh.on('change:bounds', this.refreshSource.bind(this));
+    this.mesh.on('all', this.propagateMeshEvent);
+    this.mesh.on('change:bounds', this.refreshSource);
 
     this.triangles = this.mesh.triangles;
     this.points = this.mesh.points;
@@ -60,7 +65,8 @@ export class Image extends EventDispatcher {
     switch (this.el.tagName) {
       case 'IMG':
         this.loaded = this.el.complete && this.el.naturalWidth !== 0;
-        this.el.onload = this.loadHandler.bind(this);
+        // Use pre-bound loadHandler method
+        this.el.onload = this.loadHandler;
         this.refreshSource();
         break;
 
