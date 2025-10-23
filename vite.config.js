@@ -31,5 +31,5 @@ export default defineConfig({
   },
   // For development/demo page
   root: './',
-  publicDir: 'public'
+  publicDir: 'examples'
 });
