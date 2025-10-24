@@ -901,10 +901,15 @@ class GuiProject extends BaseComponent {
         });
 
         if (nearestPoint !== null) {
+          console.log('[gui-project] Deleting point index:', nearestPoint, 'from all', this.project.images.length, 'images');
+
           // Delete point from ALL images to keep them in sync
-          this.project.images.forEach(img => {
+          this.project.images.forEach((img, idx) => {
+            console.log(`  - Removing point ${nearestPoint} from image ${idx} (currently has ${img.points.length} points)`);
             img.removePoint(nearestPoint);
           });
+
+          console.log('[gui-project] After deletion, first image has', this.project.images[0].points.length, 'points');
         }
       });
     });
