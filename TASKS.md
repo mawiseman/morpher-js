@@ -98,8 +98,33 @@
 - [x] Update localStorage persistence layer
 
 ### Project Structure Improvements
-- [ ] structure different areas /src /demo /gui
+- [x] structure different areas /src /demo /gui (completed with monorepo)
 - [ ] review, cosolidate and move all the .md files out of the root
+
+### GUI2 Migration (Vanilla JS + Web Components) ✅
+- [x] Create `packages/gui2/` package structure
+- [x] Set up package.json and vite.config.js for GUI2
+- [x] Create base Web Component architecture (BaseComponent)
+- [x] Migrate Project model from Backbone to vanilla JS (EventTarget)
+- [x] Migrate Image model from Backbone to vanilla JS
+- [x] Create MainView custom element (<gui-main>)
+- [x] Create ProjectView custom element (<gui-project>)
+- [x] Create ImageView custom element (<gui-image>)
+- [x] Implement localStorage persistence layer (LocalStorageManager)
+- [x] Migrate event handling to native DOM events (CustomEvent)
+- [x] Add canvas interactions (click to add points)
+- [x] Implement project export to JSON
+- [x] Add file upload for images
+- [x] Style with modern CSS (dark theme, no jQuery UI)
+- [x] Build successfully (16 KB app + 25 KB morpher)
+- [x] Zero framework dependencies (Vanilla JS only)
+- [ ] Create PointView custom element (draggable points) - deferred
+- [ ] Create MidpointView custom element - deferred
+- [ ] Add advanced drag-and-drop for mesh editing - future enhancement
+- [ ] Create modal popup component - simplified to basic prompts
+- [ ] Test all GUI functionality thoroughly
+- [ ] Add keyboard shortcuts
+- [ ] Add undo/redo functionality
 
 ### Advanced Performance
 - [x] Implement Web Workers for mesh calculations
