@@ -902,10 +902,15 @@ class GuiProject extends BaseComponent {
         let nearestPoint = null;
         let nearestDistance = Infinity;
 
+        console.log('[gui-project] Right-click at canvas position:', { x, y });
+        console.log('[gui-project] Image has', image.points.length, 'points');
+
         image.points.forEach((point, index) => {
           const pointX = point.x * canvasWidth;
           const pointY = point.y * canvasHeight;
           const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
+
+          console.log(`  Point ${index}: canvas (${pointX.toFixed(1)}, ${pointY.toFixed(1)}) distance: ${distance.toFixed(1)}px`);
 
           if (distance < clickRadius && distance < nearestDistance) {
             nearestPoint = index;
@@ -913,14 +918,19 @@ class GuiProject extends BaseComponent {
           }
         });
 
+        console.log('[gui-project] Nearest point:', nearestPoint, 'at', nearestDistance?.toFixed(1), 'px');
+
         if (nearestPoint !== null) {
           console.log('[gui-project] Deleting point index:', nearestPoint, 'from all', this.project.images.length, 'images');
 
           // Delete point from ALL images atomically (without triggering events yet)
           this.project.images.forEach((img, idx) => {
-            console.log(`  - Removing point ${nearestPoint} from image ${idx} (currently has ${img.points.length} points)`);
+            console.log(`  - Image ${idx}: ${img.points.length} points before deletion`);
             if (nearestPoint >= 0 && nearestPoint < img.points.length) {
               img.points.splice(nearestPoint, 1);
+              console.log(`    Deleted point ${nearestPoint}, now ${img.points.length} points`);
+            } else {
+              console.log(`    ERROR: Point ${nearestPoint} out of range (0-${img.points.length - 1})`);
             }
           });
 
@@ -931,7 +941,9 @@ class GuiProject extends BaseComponent {
           // Trigger re-render
           this.drawCanvases();
 
-          console.log('[gui-project] After deletion, images have:', this.project.images.map(img => img.points.length), 'points');
+          console.log('[gui-project] Final point counts:', this.project.images.map(img => img.points.length));
+        } else {
+          console.log('[gui-project] No point found within', clickRadius, 'px');
         }
       });
     });
