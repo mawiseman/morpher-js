@@ -242,11 +242,8 @@ class GuiProject extends BaseComponent {
 
         .weight-slider {
           width: 100%;
+          height: 24px;
           cursor: pointer;
-          pointer-events: auto;
-          user-select: none;
-          -webkit-user-select: none;
-          touch-action: none;
         }
 
         /* Better slider styling for interactivity */
@@ -257,8 +254,11 @@ class GuiProject extends BaseComponent {
           height: 16px;
           border-radius: 50%;
           background: var(--color-primary, #007bff);
-          cursor: pointer;
-          pointer-events: auto;
+          cursor: grab;
+        }
+
+        .weight-slider::-webkit-slider-thumb:active {
+          cursor: grabbing;
         }
 
         .weight-slider::-moz-range-thumb {
@@ -266,9 +266,12 @@ class GuiProject extends BaseComponent {
           height: 16px;
           border-radius: 50%;
           background: var(--color-primary, #007bff);
-          cursor: pointer;
-          pointer-events: auto;
+          cursor: grab;
           border: none;
+        }
+
+        .weight-slider::-moz-range-thumb:active {
+          cursor: grabbing;
         }
 
         .weight-slider::-webkit-slider-runnable-track {
@@ -276,7 +279,6 @@ class GuiProject extends BaseComponent {
           height: 6px;
           background: var(--color-border, #ddd);
           border-radius: 3px;
-          cursor: pointer;
         }
 
         .weight-slider::-moz-range-track {
@@ -284,7 +286,6 @@ class GuiProject extends BaseComponent {
           height: 6px;
           background: var(--color-border, #ddd);
           border-radius: 3px;
-          cursor: pointer;
         }
 
         .image-actions {
@@ -442,27 +443,36 @@ class GuiProject extends BaseComponent {
     // Weight sliders
     const sliders = this.queryAll('.weight-slider');
     sliders.forEach(slider => {
+      const handleWeightInput = (e) => {
+        // Update only the display, don't modify the model yet
+        const imageId = e.target.dataset.imageId;
+        const value = parseFloat(e.target.value);
+
+        // Update display immediately
+        const tile = this.query(`[data-image-id="${imageId}"]`);
+        if (tile) {
+          const valueSpan = tile.querySelector('.weight-value');
+          if (valueSpan) {
+            valueSpan.textContent = value.toFixed(2);
+          }
+        }
+      };
+
       const handleWeightChange = (e) => {
+        // Only update the model when user releases the slider
         const imageId = e.target.dataset.imageId;
         const value = parseFloat(e.target.value);
         const image = this.project.images.find(img => img.id === imageId);
 
         if (image) {
+          // This will trigger change:weight event and re-render
           image.targetWeight = value;
-
-          // Update display
-          const tile = this.query(`[data-image-id="${imageId}"]`);
-          if (tile) {
-            const valueSpan = tile.querySelector('.weight-value');
-            if (valueSpan) {
-              valueSpan.textContent = value.toFixed(2);
-            }
-          }
         }
       };
 
-      // Listen to both input (while dragging) and change (on release)
-      this.addTrackedListener(slider, 'input', handleWeightChange);
+      // input = while dragging (update display only)
+      // change = on release (update model)
+      this.addTrackedListener(slider, 'input', handleWeightInput);
       this.addTrackedListener(slider, 'change', handleWeightChange);
     });
 
