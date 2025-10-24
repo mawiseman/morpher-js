@@ -854,6 +854,49 @@ class GuiProject extends BaseComponent {
           canvas.style.cursor = 'crosshair';
         }
       });
+
+      this.addTrackedListener(canvas, 'contextmenu', (e) => {
+        e.preventDefault(); // Prevent default context menu
+
+        if (!this.project) {
+          return;
+        }
+
+        const image = this.project.images.find(img => img.id === imageId);
+        if (!image) {
+          return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const canvasWidth = rect.width;
+        const canvasHeight = rect.height;
+
+        // Check if right-clicking near an existing point
+        const clickRadius = 10; // pixels
+
+        let nearestPoint = null;
+        let nearestDistance = Infinity;
+
+        image.points.forEach((point, index) => {
+          const pointX = point.x * canvasWidth;
+          const pointY = point.y * canvasHeight;
+          const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
+
+          if (distance < clickRadius && distance < nearestDistance) {
+            nearestPoint = index;
+            nearestDistance = distance;
+          }
+        });
+
+        if (nearestPoint !== null) {
+          // Delete point from ALL images to keep them in sync
+          this.project.images.forEach(img => {
+            img.removePoint(nearestPoint);
+          });
+        }
+      });
     });
 
     // Delete buttons
