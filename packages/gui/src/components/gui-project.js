@@ -94,6 +94,29 @@ class GuiProject extends BaseComponent {
         this.handleFileSelect(e);
       });
     }
+
+    // Drag and drop
+    const tilesContainer = this.query('.tiles-container');
+    if (tilesContainer) {
+      this.addTrackedListener(tilesContainer, 'dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        tilesContainer.classList.add('drag-over');
+      });
+
+      this.addTrackedListener(tilesContainer, 'dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        tilesContainer.classList.remove('drag-over');
+      });
+
+      this.addTrackedListener(tilesContainer, 'drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        tilesContainer.classList.remove('drag-over');
+        this.handleDrop(e);
+      });
+    }
   }
 
   handleAddImage() {
@@ -107,6 +130,30 @@ class GuiProject extends BaseComponent {
   async handleFileSelect(event) {
     const files = event.target.files;
     if (!files || files.length === 0 || !this.project) return;
+
+    await this.processFiles(files);
+
+    // Reset input
+    event.target.value = '';
+  }
+
+  async handleDrop(event) {
+    const files = event.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    // Filter to only image files
+    const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      alert('Please drop image files only');
+      return;
+    }
+
+    await this.processFiles(imageFiles);
+  }
+
+  async processFiles(files) {
+    if (!this.project) return;
 
     for (const file of files) {
       try {
@@ -128,9 +175,6 @@ class GuiProject extends BaseComponent {
         alert(`Failed to load image: ${file.name}`);
       }
     }
-
-    // Reset input
-    event.target.value = '';
   }
 
   render() {
@@ -164,6 +208,16 @@ class GuiProject extends BaseComponent {
           gap: var(--spacing-md, 16px);
           overflow-x: auto;
           padding-bottom: var(--spacing-md, 16px);
+          transition: background-color 0.2s ease, border-color 0.2s ease;
+          padding: var(--spacing-md, 16px);
+          margin: calc(-1 * var(--spacing-md, 16px));
+          border: 2px dashed transparent;
+          border-radius: 8px;
+        }
+
+        .tiles-container.drag-over {
+          background-color: rgba(0, 123, 255, 0.05);
+          border-color: var(--color-primary, #007bff);
         }
 
         .tiles-container::-webkit-scrollbar {
