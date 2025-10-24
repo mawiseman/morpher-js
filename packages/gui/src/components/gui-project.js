@@ -733,6 +733,11 @@ class GuiProject extends BaseComponent {
       const imageId = canvas.dataset.imageId;
 
       this.addTrackedListener(canvas, 'mousedown', (e) => {
+        // Only handle left-click (button 0)
+        if (e.button !== 0) {
+          return;
+        }
+
         if (!this.project) {
           return;
         }
