@@ -241,51 +241,82 @@ class GuiProject extends BaseComponent {
         }
 
         .weight-slider {
+          -webkit-appearance: none;
+          appearance: none;
           width: 100%;
-          height: 24px;
+          height: 6px;
+          border-radius: 3px;
+          background: var(--color-border, #ddd);
+          outline: none;
           cursor: pointer;
         }
 
-        /* Better slider styling for interactivity */
+        /* Webkit (Chrome, Safari, Edge) - Track */
+        .weight-slider::-webkit-slider-runnable-track {
+          width: 100%;
+          height: 6px;
+          border-radius: 3px;
+          background: transparent;
+        }
+
+        /* Webkit - Thumb */
         .weight-slider::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
           background: var(--color-primary, #007bff);
           cursor: grab;
+          margin-top: -6px; /* Centers thumb on track (18px - 6px) / 2 */
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+          transition: transform 0.1s ease;
+        }
+
+        .weight-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.1);
         }
 
         .weight-slider::-webkit-slider-thumb:active {
           cursor: grabbing;
+          transform: scale(1.15);
         }
 
+        /* Firefox - Track */
+        .weight-slider::-moz-range-track {
+          width: 100%;
+          height: 6px;
+          border-radius: 3px;
+          background: var(--color-border, #ddd);
+          border: none;
+        }
+
+        /* Firefox - Thumb */
         .weight-slider::-moz-range-thumb {
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
           background: var(--color-primary, #007bff);
           cursor: grab;
           border: none;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+          transition: transform 0.1s ease;
+        }
+
+        .weight-slider::-moz-range-thumb:hover {
+          transform: scale(1.1);
         }
 
         .weight-slider::-moz-range-thumb:active {
           cursor: grabbing;
+          transform: scale(1.15);
         }
 
-        .weight-slider::-webkit-slider-runnable-track {
-          width: 100%;
+        /* Firefox - Progress (filled portion) */
+        .weight-slider::-moz-range-progress {
           height: 6px;
-          background: var(--color-border, #ddd);
           border-radius: 3px;
-        }
-
-        .weight-slider::-moz-range-track {
-          width: 100%;
-          height: 6px;
-          background: var(--color-border, #ddd);
-          border-radius: 3px;
+          background: var(--color-primary, #007bff);
         }
 
         .image-actions {
@@ -395,6 +426,7 @@ class GuiProject extends BaseComponent {
                     step="0.01"
                     value="${image.targetWeight}"
                     data-image-id="${image.id}"
+                    style="background: linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${image.targetWeight * 100}%, var(--color-border, #ddd) ${image.targetWeight * 100}%, var(--color-border, #ddd) 100%);"
                   />
                 </div>
                 <div class="image-actions">
@@ -447,6 +479,10 @@ class GuiProject extends BaseComponent {
         // Update only the display, don't modify the model yet
         const imageId = e.target.dataset.imageId;
         const value = parseFloat(e.target.value);
+        const percentage = value * 100;
+
+        // Update slider background gradient
+        e.target.style.background = `linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${percentage}%, var(--color-border, #ddd) ${percentage}%, var(--color-border, #ddd) 100%)`;
 
         // Update display immediately
         const tile = this.query(`[data-image-id="${imageId}"]`);
