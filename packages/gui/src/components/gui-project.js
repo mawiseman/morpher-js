@@ -545,13 +545,18 @@ class GuiProject extends BaseComponent {
     this.project.images.forEach(image => {
       if (!image.file) return;
 
-      const canvas = this.query(`.image-canvas[data-image-id="${image.id}"]`);
-      if (!canvas) return;
-
-      const ctx = canvas.getContext('2d');
+      // Capture the image ID for the closure
+      const imageId = image.id;
       const img = new window.Image();
 
       img.onload = () => {
+        // Re-query for the canvas to ensure we have the correct one
+        // (in case DOM was updated between starting load and onload firing)
+        const canvas = this.query(`.image-canvas[data-image-id="${imageId}"]`);
+        if (!canvas) return; // Canvas might have been removed
+
+        const ctx = canvas.getContext('2d');
+
         // Calculate dimensions to fit image in canvas while maintaining aspect ratio
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
