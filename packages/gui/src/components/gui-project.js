@@ -210,12 +210,15 @@ class GuiProject extends BaseComponent {
         .canvas-placeholder {
           color: var(--color-text-secondary, #999);
           font-size: var(--font-size-sm, 14px);
+          position: absolute;
+          z-index: 1;
         }
 
-        .image-preview {
+        .image-canvas {
           max-width: 100%;
           max-height: 100%;
-          object-fit: contain;
+          display: block;
+          image-rendering: auto;
         }
 
         .image-info {
@@ -408,11 +411,15 @@ class GuiProject extends BaseComponent {
             ${images.map((image, index) => `
               <div class="image-tile" data-image-id="${image.id}">
                 <div class="canvas-container">
-                  ${image.file ? `
-                    <img class="image-preview" src="${image.file}" alt="${this.escapeHTML(image.url)}" />
-                  ` : `
+                  <canvas
+                    class="image-canvas"
+                    data-image-id="${image.id}"
+                    width="300"
+                    height="300"
+                  ></canvas>
+                  ${!image.file ? `
                     <div class="canvas-placeholder">Loading...</div>
-                  `}
+                  ` : ''}
                 </div>
                 <div class="image-info">
                   <div class="image-url" title="${this.escapeHTML(image.url)}">${this.escapeHTML(image.url || 'Untitled')}</div>
@@ -472,6 +479,56 @@ class GuiProject extends BaseComponent {
 
     this.addEventListeners();
     this.addImageEventListeners();
+    this.drawCanvases();
+  }
+
+  /**
+   * Draw images on canvases
+   */
+  drawCanvases() {
+    if (!this.project) return;
+
+    this.project.images.forEach(image => {
+      if (!image.file) return;
+
+      const canvas = this.query(`.image-canvas[data-image-id="${image.id}"]`);
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const img = new window.Image();
+
+      img.onload = () => {
+        // Calculate dimensions to fit image in canvas while maintaining aspect ratio
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const imgAspect = img.width / img.height;
+        const canvasAspect = canvasWidth / canvasHeight;
+
+        let drawWidth, drawHeight, offsetX, offsetY;
+
+        if (imgAspect > canvasAspect) {
+          // Image is wider - fit to width
+          drawWidth = canvasWidth;
+          drawHeight = canvasWidth / imgAspect;
+          offsetX = 0;
+          offsetY = (canvasHeight - drawHeight) / 2;
+        } else {
+          // Image is taller - fit to height
+          drawHeight = canvasHeight;
+          drawWidth = canvasHeight * imgAspect;
+          offsetX = (canvasWidth - drawWidth) / 2;
+          offsetY = 0;
+        }
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+        // Draw image centered and scaled
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      };
+
+      img.src = image.file;
+    });
   }
 
   addImageEventListeners() {
