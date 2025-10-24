@@ -1,0 +1,65 @@
+MorpherJS GUI v2 loaded
+Image.js:84 Setting image source from file: blob:http://localhost:3003/c5855f06-dc96-4288-8d86-298343feb1dc
+Image.js:20 MorpherImage loaded! Source canvas: <canvas width=​"2048" height=​"1093">​
+Image.js:21 Canvas size: 0 x 0
+Project.js:120 Image loaded in project, setting up default mesh
+Project.js:127 Adding default corner points for 2048 x 1093 image
+gui-image.js:83 Point added event received
+gui-image.js:236 drawPoints() called
+gui-image.js:247 drawPoints: {canvasWidth: 0, canvasHeight: 0, pointsCount: 1, loaded: true, points: Array(1)}
+gui-image.js:262 Base image redrawn
+gui-image.js:269 Drawing 1 points on canvas
+gui-image.js:274 Drawing point 0 at (0, 0), selected: false
+gui-image.js:299 Points drawing complete
+gui-image.js:83 Point added event received
+gui-image.js:236 drawPoints() called
+gui-image.js:247 drawPoints: {canvasWidth: 2048, canvasHeight: 0, pointsCount: 2, loaded: true, points: Array(2)}
+gui-image.js:262 Base image redrawn
+gui-image.js:269 Drawing 2 points on canvas
+gui-image.js:274 Drawing point 0 at (0, 0), selected: false
+gui-image.js:274 Drawing point 1 at (2048, 0), selected: false
+gui-image.js:299 Points drawing complete
+gui-image.js:83 Point added event received
+gui-image.js:236 drawPoints() called
+gui-image.js:247 drawPoints: {canvasWidth: 2048, canvasHeight: 1093, pointsCount: 3, loaded: true, points: Array(3)}
+gui-image.js:262 Base image redrawn
+gui-image.js:269 Drawing 3 points on canvas
+gui-image.js:274 Drawing point 0 at (0, 0), selected: false
+gui-image.js:274 Drawing point 1 at (2048, 0), selected: false
+gui-image.js:274 Drawing point 2 at (0, 1093), selected: false
+gui-image.js:299 Points drawing complete
+gui-image.js:83 Point added event received
+gui-image.js:236 drawPoints() called
+gui-image.js:247 drawPoints: {canvasWidth: 2048, canvasHeight: 1093, pointsCount: 4, loaded: true, points: Array(4)}
+gui-image.js:262 Base image redrawn
+gui-image.js:269 Drawing 4 points on canvas
+gui-image.js:274 Drawing point 0 at (0, 0), selected: false
+gui-image.js:274 Drawing point 1 at (2048, 0), selected: false
+gui-image.js:274 Drawing point 2 at (0, 1093), selected: false
+gui-image.js:274 Drawing point 3 at (2048, 1093), selected: false
+gui-image.js:299 Points drawing complete
+gui-image.js:21 ImageModel load event received
+gui-image.js:93 updateCanvas called
+gui-image.js:96 Updating canvas, source: <canvas width=​"2048" height=​"1093">​
+gui-image.js:97 Source dimensions: 2048 x 1093
+gui-image.js:236 drawPoints() called
+gui-image.js:247 drawPoints: {canvasWidth: 2048, canvasHeight: 1093, pointsCount: 4, loaded: true, points: Array(4)}
+gui-image.js:262 Base image redrawn
+gui-image.js:269 Drawing 4 points on canvas
+gui-image.js:274 Drawing point 0 at (0, 0), selected: false
+gui-image.js:274 Drawing point 1 at (2048, 0), selected: false
+gui-image.js:274 Drawing point 2 at (0, 1093), selected: false
+gui-image.js:274 Drawing point 3 at (2048, 1093), selected: false
+gui-image.js:299 Points drawing complete
+gui-image.js:93 updateCanvas called
+gui-image.js:96 Updating canvas, source: <canvas width=​"2048" height=​"1093">​
+gui-image.js:97 Source dimensions: 2048 x 1093
+gui-image.js:236 drawPoints() called
+gui-image.js:247 drawPoints: {canvasWidth: 2048, canvasHeight: 1093, pointsCount: 4, loaded: true, points: Array(4)}
+gui-image.js:262 Base image redrawn
+gui-image.js:269 Drawing 4 points on canvas
+gui-image.js:274 Drawing point 0 at (0, 0), selected: false
+gui-image.js:274 Drawing point 1 at (2048, 0), selected: false
+gui-image.js:274 Drawing point 2 at (0, 1093), selected: false
+gui-image.js:274 Drawing point 3 at (2048, 1093), selected: false
+gui-image.js:299 Points drawing complete

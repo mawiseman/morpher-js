@@ -1,21 +1,41 @@
 {
   "name": "@morpher-js/gui",
   "version": "2.0.0",
-  "private": true,
-  "description": "MorpherJS GUI Editor - Visual mesh editor and project manager",
+  "description": "Web-based GUI for MorpherJS image morphing library",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .js",
+    "format": "prettier --write \"src/**/*.{js,css,html}\"",
+    "clean": "rimraf dist node_modules"
   },
+  "keywords": [
+    "morphing",
+    "image",
+    "gui",
+    "canvas",
+    "web-components"
+  ],
+  "author": "Paweł Bator",
+  "license": "MIT",
   "dependencies": {
-    "morpher-js": "*",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "lit-html": "^3.1.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5.0.4",
-    "vite": "^5.0.0"
+    "@vitest/ui": "^1.0.0",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "happy-dom": "^12.0.0",
+    "prettier": "^3.1.0",
+    "rimraf": "^5.0.0",
+    "vite": "^5.0.0",
+    "vite-plugin-inspect": "^0.8.0",
+    "vitest": "^1.0.0"
   }
 }

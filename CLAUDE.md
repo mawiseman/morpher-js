@@ -31,6 +31,9 @@ Before making any changes:
 - Add code comments for complex logic
 - Update TypeScript definitions
 
+
+Always read PLANNING.md at the start of every new conversation, check TASKS.md before starting your work, mark completed tasks to TASKS.md immediately, and add newly discovered tasks to TASKS.md when found.
+
 ---
 
 ## Task Processing Workflow

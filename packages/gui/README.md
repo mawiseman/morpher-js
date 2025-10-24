@@ -1,89 +1,133 @@
-# MorpherJS GUI Editor
+# MorpherJS GUI
 
-Visual editor for creating and managing morphing projects with MorpherJS.
+Web-based visual editor for the MorpherJS image morphing library, built with Web Components and Vite.
 
 ## Features
 
-- **Multi-Project Management** - Create and manage multiple morphing projects
-- **Visual Mesh Editing** - Drag-and-drop mesh editing with real-time preview
-- **Image Management** - Add, remove, and configure images
-- **Weight Controls** - Adjust blend weights with sliders
-- **Custom Functions** - Define custom blend and final touch functions
-- **Export/Import** - Export projects to JSON for use in your applications
-- **LocalStorage Persistence** - Projects automatically saved to browser storage
-
-## Running Locally
-
-```bash
-npm run dev
-```
-
-This will start the GUI editor on http://localhost:3001
-
-## Building
-
-```bash
-npm run build
-```
-
-The built application will be in the `dist/` directory.
-
-## Usage
-
-### Creating a Project
-
-1. Click "New Project" to create a new morphing project
-2. Give it a meaningful name
-3. Add images using the "Add Image" button
-4. Upload image files for each image slot
-5. Adjust mesh points by dragging them on the canvas
-6. Set blend weights using the sliders
-
-### Exporting Configuration
-
-Once you've configured your morph, click "Export JSON" to get the configuration object. You can use this in your application:
-
-```javascript
-import { Morpher } from 'morpher-js';
-
-const config = {
-  // Your exported configuration
-};
-
-const morpher = new Morpher(config);
-morpher.attach(document.getElementById('canvas'));
-```
-
-### Custom Functions
-
-The GUI supports custom blend and final touch functions:
-
-**Blend Function:**
-```javascript
-function(destination, source, weight) {
-  const ctx = destination.getContext('2d');
-  ctx.globalAlpha = weight;
-  ctx.drawImage(source, 0, 0);
-}
-```
-
-**Final Touch Function:**
-```javascript
-function(canvas) {
-  const ctx = canvas.getContext('2d');
-  // Apply final processing
-}
-```
+- **Visual Mesh Editor**: Interactive canvas-based editor for defining morph geometry
+- **Multi-Project Management**: Create and manage multiple morphing projects
+- **Real-time Preview**: See morphing results as you adjust weights
+- **Persistent Storage**: Projects automatically saved to browser localStorage
+- **JSON Export**: Export configurations for use in standalone applications
 
 ## Technology Stack
 
-- **React 19** - UI framework
-- **Vite** - Build tool and dev server
-- **MorpherJS** - Core morphing library
-- **LocalStorage** - Data persistence
+- **Build Tool**: Vite 5.x
+- **UI Framework**: Web Components (Custom Elements v1)
+- **Language**: ES2022+ JavaScript
+- **Styling**: CSS3 with CSS Custom Properties
+- **Template Rendering**: lit-html
+- **Testing**: Vitest
 
-## Links
+## Getting Started
 
-- [Core Library](../morpher/)
-- [Demos](../demos/)
-- [Documentation](../../docs/)
+### Installation
+
+```bash
+# Install dependencies
+npm install
+```
+
+### Development
+
+```bash
+# Start dev server with HMR
+npm run dev
+
+# Open http://localhost:3000
+```
+
+### Build
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+### Testing
+
+```bash
+# Run tests
+npm test
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Linting & Formatting
+
+```bash
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+```
+
+## Project Structure
+
+```
+packages/gui/
+├── public/           # Static assets
+│   ├── fonts/        # Icon fonts
+│   └── images/       # Sample images
+├── src/
+│   ├── components/   # Web Components
+│   ├── models/       # State management
+│   ├── utils/        # Utility functions
+│   ├── styles/       # Global styles
+│   ├── main.js       # Entry point
+│   └── index.html    # HTML template
+├── tests/            # Test files
+└── dist/             # Build output
+```
+
+## Usage
+
+### Basic Workflow
+
+1. **Create Project**: Click "New Project" to start
+2. **Add Images**: Upload images or enter URLs
+3. **Define Mesh**: Click canvas to add points, create triangles
+4. **Adjust Weights**: Use sliders to blend between images
+5. **Export**: Generate JSON configuration for production use
+
+### Keyboard Shortcuts
+
+- `Ctrl/Cmd + N` - New project
+- `Ctrl/Cmd + ←` - Previous project
+- `Ctrl/Cmd + →` - Next project
+
+## Architecture
+
+The application follows a component-based architecture:
+
+- **Components**: Web Components for UI (Shadow DOM for encapsulation)
+- **Models**: Plain JavaScript classes extending EventTarget for state
+- **Storage**: localStorage for persistence
+- **Events**: CustomEvent for component communication
+
+See [PLANNING.md](../../PLANNING.md) for detailed architecture documentation.
+
+## Development Status
+
+**Phase 1: Foundation & Setup** ✅ Complete
+- Package structure created
+- Build system configured
+- Base styles and assets in place
+
+**Next Steps**: Implement core components and state management
+
+## Contributing
+
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
+
+## License
+
+MIT License - see [LICENSE](../../LICENSE)
