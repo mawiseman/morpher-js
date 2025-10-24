@@ -232,6 +232,12 @@ export class Project extends EventTarget {
     const points = this.images[0].points;
     this.triangles = triangulate(points);
 
+    console.log('[Project] Auto-triangulated:', {
+      pointCount: points.length,
+      triangleCount: this.triangles.length,
+      triangles: this.triangles
+    });
+
     this.dispatchEvent(new CustomEvent('mesh:change', {
       detail: { type: 'triangulation', triangles: this.triangles, project: this }
     }));

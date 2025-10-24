@@ -814,6 +814,11 @@ class GuiProject extends BaseComponent {
       });
 
       this.addTrackedListener(canvas, 'mouseup', (e) => {
+        // Only handle left-click (button 0)
+        if (e.button !== 0) {
+          return;
+        }
+
         if (!this.project) {
           return;
         }
