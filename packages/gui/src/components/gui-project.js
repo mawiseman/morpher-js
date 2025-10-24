@@ -46,7 +46,6 @@ class GuiProject extends BaseComponent {
       // Remove listeners from all images
       this.project.images.forEach((image) => {
         image.removeEventListener('change:src', this.handleImageChange);
-        image.removeEventListener('change:weight', this.handleImageChange);
       });
     }
 
@@ -59,10 +58,10 @@ class GuiProject extends BaseComponent {
       this.project.addEventListener('image:add', this.handleProjectImageAdd);
       this.project.addEventListener('image:remove', this.handleImageChange);
 
-      // Listen to all existing images
+      // Listen to all existing images for src changes only
+      // (weight changes are handled manually in the slider to avoid re-renders)
       this.project.images.forEach((image) => {
         image.addEventListener('change:src', this.handleImageChange);
-        image.addEventListener('change:weight', this.handleImageChange);
       });
     }
 
@@ -74,7 +73,7 @@ class GuiProject extends BaseComponent {
     const image = event.detail?.image;
     if (image) {
       image.addEventListener('change:src', this.handleImageChange);
-      image.addEventListener('change:weight', this.handleImageChange);
+      // Don't listen to weight changes - handled manually in slider
     }
     this.render();
   };
@@ -476,15 +475,22 @@ class GuiProject extends BaseComponent {
     const sliders = this.queryAll('.weight-slider');
     sliders.forEach(slider => {
       const handleWeightInput = (e) => {
-        // Update only the display, don't modify the model yet
+        // Update the model to trigger weight normalization
         const imageId = e.target.dataset.imageId;
         const value = parseFloat(e.target.value);
         const percentage = value * 100;
+        const image = this.project.images.find(img => img.id === imageId);
 
-        // Update slider background gradient
+        if (!image) return;
+
+        // Update the changed image's targetWeight
+        // This will trigger handleWeightChange in Project model
+        image.targetWeight = value;
+
+        // Update current slider background gradient
         e.target.style.background = `linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${percentage}%, var(--color-border, #ddd) ${percentage}%, var(--color-border, #ddd) 100%)`;
 
-        // Update display immediately
+        // Update current slider display
         const tile = this.query(`[data-image-id="${imageId}"]`);
         if (tile) {
           const valueSpan = tile.querySelector('.weight-value');
@@ -492,22 +498,42 @@ class GuiProject extends BaseComponent {
             valueSpan.textContent = value.toFixed(2);
           }
         }
+
+        // Update all OTHER sliders to reflect normalized weights
+        this.project.images.forEach(img => {
+          if (img.id !== imageId) {
+            const otherSlider = this.query(`.weight-slider[data-image-id="${img.id}"]`);
+            const otherTile = this.query(`[data-image-id="${img.id}"]`);
+
+            if (otherSlider) {
+              // Update slider value
+              otherSlider.value = img.weight;
+
+              // Update slider background
+              const otherPercentage = img.weight * 100;
+              otherSlider.style.background = `linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${otherPercentage}%, var(--color-border, #ddd) ${otherPercentage}%, var(--color-border, #ddd) 100%)`;
+            }
+
+            if (otherTile) {
+              // Update display text
+              const otherValueSpan = otherTile.querySelector('.weight-value');
+              if (otherValueSpan) {
+                otherValueSpan.textContent = img.weight.toFixed(2);
+              }
+            }
+          }
+        });
       };
 
       const handleWeightChange = (e) => {
-        // Only update the model when user releases the slider
-        const imageId = e.target.dataset.imageId;
-        const value = parseFloat(e.target.value);
-        const image = this.project.images.find(img => img.id === imageId);
-
-        if (image) {
-          // This will trigger change:weight event and re-render
-          image.targetWeight = value;
+        // Save to localStorage when user releases the slider
+        if (this.project) {
+          this.project.save();
         }
       };
 
-      // input = while dragging (update display only)
-      // change = on release (update model)
+      // input = while dragging (update model + all sliders for live normalization)
+      // change = on release (save to localStorage)
       this.addTrackedListener(slider, 'input', handleWeightInput);
       this.addTrackedListener(slider, 'change', handleWeightChange);
     });
