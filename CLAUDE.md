@@ -61,8 +61,18 @@ Before starting a task, check if it depends on other tasks:
 
 ### Step 4: Test Changes
 ```bash
+# IMPORTANT: Before testing, kill any existing Node.js/Vite dev servers
+# to avoid port conflicts and ensure clean testing environment
+# On Windows:
+taskkill /F /IM node.exe
+# On Linux/Mac:
+pkill node
+
 # Run existing tests (if any)
 npm test
+
+# Start dev server for manual testing
+npm run dev
 
 # Manual testing checklist:
 # - Does the demo still work?
