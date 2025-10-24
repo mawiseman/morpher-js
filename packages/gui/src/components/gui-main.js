@@ -34,6 +34,10 @@ class GuiMain extends BaseComponent {
       this.updateProject();
     });
 
+    this.addTrackedListener(projectStore, 'reset', () => {
+      this.updateProject();
+    });
+
     // Initial project
     this.updateProject();
   }
