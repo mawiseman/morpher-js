@@ -22,6 +22,7 @@ import { generateId } from '../utils/id-generator.js';
 import { randomPastelColor } from '../utils/colors.js';
 import { Image } from './Image.js';
 import { createNamespace } from '../utils/storage.js';
+import { triangulate } from '../utils/delaunay.js';
 
 const STORAGE_NAMESPACE = 'morpher-gui';
 
@@ -177,6 +178,7 @@ export class Project extends EventTarget {
     // Listen to point changes and always save
     // (skipSave only applies to initial project load, not ongoing changes)
     image.addEventListener('points:change', () => {
+      this.autoTriangulate();
       this.save();
     });
 
@@ -214,6 +216,25 @@ export class Project extends EventTarget {
 
       this.save();
     }
+  }
+
+  /**
+   * Automatically triangulate mesh based on first image's points
+   * Uses Delaunay triangulation algorithm
+   */
+  autoTriangulate() {
+    // Get points from first image (all images should have same number of points)
+    if (this.images.length === 0 || !this.images[0].points || this.images[0].points.length < 3) {
+      this.triangles = [];
+      return;
+    }
+
+    const points = this.images[0].points;
+    this.triangles = triangulate(points);
+
+    this.dispatchEvent(new CustomEvent('mesh:change', {
+      detail: { type: 'triangulation', triangles: this.triangles, project: this }
+    }));
   }
 
   /**
