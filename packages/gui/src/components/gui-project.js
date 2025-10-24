@@ -903,13 +903,22 @@ class GuiProject extends BaseComponent {
         if (nearestPoint !== null) {
           console.log('[gui-project] Deleting point index:', nearestPoint, 'from all', this.project.images.length, 'images');
 
-          // Delete point from ALL images to keep them in sync
+          // Delete point from ALL images atomically (without triggering events yet)
           this.project.images.forEach((img, idx) => {
             console.log(`  - Removing point ${nearestPoint} from image ${idx} (currently has ${img.points.length} points)`);
-            img.removePoint(nearestPoint);
+            if (nearestPoint >= 0 && nearestPoint < img.points.length) {
+              img.points.splice(nearestPoint, 1);
+            }
           });
 
-          console.log('[gui-project] After deletion, first image has', this.project.images[0].points.length, 'points');
+          // Now trigger triangulation and save once
+          this.project.autoTriangulate();
+          this.project.save();
+
+          // Trigger re-render
+          this.drawCanvases();
+
+          console.log('[gui-project] After deletion, images have:', this.project.images.map(img => img.points.length), 'points');
         }
       });
     });
