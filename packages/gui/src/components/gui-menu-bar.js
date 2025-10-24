@@ -118,7 +118,7 @@ class GuiMenuBar extends BaseComponent {
     const deleteBtn = this.query('.btn-delete');
     if (deleteBtn) {
       this.addTrackedListener(deleteBtn, 'click', () => {
-        if (this.currentProject && projectStore.count() > 1) {
+        if (this.currentProject) {
           if (confirm(`Delete project "${this.currentProject.name}"?`)) {
             this.emit('project-delete', { project: this.currentProject });
             projectStore.remove(this.currentProject);
@@ -323,7 +323,7 @@ class GuiMenuBar extends BaseComponent {
 
         <div class="menu-right">
           <button class="btn btn-new" title="New Project">New</button>
-          <button class="btn btn-delete" title="Delete Project" ${projectCount <= 1 ? 'disabled' : ''}>Delete</button>
+          <button class="btn btn-delete" title="Delete Project">Delete</button>
           <div class="divider"></div>
           <button class="btn btn-icon btn-prev" title="Previous Project">◀</button>
           <button class="btn btn-icon btn-next" title="Next Project">▶</button>
