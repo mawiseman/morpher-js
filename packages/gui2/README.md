@@ -59,12 +59,26 @@ The GUI automatically starts when you open the page. You'll see:
 3. **Images Grid** - All images in the project
 4. **Preview** - Real-time morphing preview
 
-### Adding Images
+### Adding Images & Creating Triangles
 
 1. Click "+ Add Image"
 2. Upload an image file
-3. Click on the canvas to add mesh points
-4. Adjust weight slider to control blend
+3. **Add mesh points** by clicking on empty canvas areas
+   - Points appear as blue circles with numbers
+   - 4 corner points are added automatically on load
+4. **Create triangles** by selecting points:
+   - Click on a blue point to select it (turns red)
+   - Select 3 points total
+   - Triangle is created automatically when 3 points are selected
+   - Selection clears, repeat for more triangles
+5. Adjust weight slider to control blend
+
+**Visual Guide:**
+- 🔵 **Blue circle** = Unselected point
+- 🔴 **Red circle** (larger) = Selected point
+- Click empty canvas = Add new point
+- Click existing point = Toggle selection
+- Select 3 points = Auto-create triangle
 
 ### Exporting
 

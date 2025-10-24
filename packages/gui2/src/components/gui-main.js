@@ -34,6 +34,10 @@ export class GuiMain extends BaseComponent {
           <div class="project-menus"></div>
         </div>
         <div class="projects"></div>
+        <div class="empty-state" style="display: none;">
+          <h2>No Projects Yet</h2>
+          <p>Click "+ New Project" to create your first morphing project</p>
+        </div>
       </div>
     `;
   }
@@ -86,10 +90,18 @@ export class GuiMain extends BaseComponent {
    * Show project at index
    */
   showProject(index) {
+    const emptyState = this.$('.empty-state');
+    const projectsContainer = this.$('.projects');
+
     if (this.projects.length === 0) {
       this.updateMenu(null);
+      if (emptyState) emptyState.style.display = 'flex';
+      if (projectsContainer) projectsContainer.style.display = 'none';
       return;
     }
+
+    if (emptyState) emptyState.style.display = 'none';
+    if (projectsContainer) projectsContainer.style.display = 'block';
 
     // Hide all projects
     this.$$('gui-project').forEach(pv => pv.hide());
@@ -165,9 +177,13 @@ export class GuiMain extends BaseComponent {
       // Remove from array
       this.projects.splice(this.currentIndex, 1);
 
-      // Show previous project
-      this.showProject(this.currentIndex - 1);
-      this.render();
+      // Show previous project or empty state
+      if (this.projects.length === 0) {
+        this.currentIndex = 0;
+        this.showProject(0); // Will show empty state
+      } else {
+        this.showProject(Math.max(0, this.currentIndex - 1));
+      }
     }
   }
 

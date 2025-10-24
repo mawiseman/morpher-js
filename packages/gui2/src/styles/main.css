@@ -340,6 +340,28 @@ input[type="range"] {
   display: block !important;
 }
 
+/* Empty State */
+.empty-state {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 40px;
+  text-align: center;
+}
+
+.empty-state h2 {
+  font-size: 32px;
+  color: #888;
+}
+
+.empty-state p {
+  font-size: 18px;
+  color: #666;
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 10px;

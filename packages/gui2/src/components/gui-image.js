@@ -8,6 +8,7 @@ export class GuiImage extends BaseComponent {
     super();
     this.image = null;
     this.project = null;
+    this.selectedPoints = []; // Track selected points for triangle creation
   }
 
   setImage(image, project) {
@@ -76,6 +77,12 @@ export class GuiImage extends BaseComponent {
       this.image.morpherImage.on('change', () => {
         this.updateCanvas();
       });
+
+      // Listen for point additions to redraw points
+      this.image.morpherImage.on('point:add', () => {
+        console.log('Point added event received');
+        this.drawPoints();
+      });
     }
   }
 
@@ -98,6 +105,9 @@ export class GuiImage extends BaseComponent {
 
         // Attach click listener to the new canvas
         this.attachCanvasClickListener();
+      } else {
+        // Canvas already exists, just redraw points
+        this.drawPoints();
       }
     } else {
       console.log('updateCanvas - missing:', { container: !!container, image: !!this.image, source: !!(this.image?.morpherImage?.source) });
@@ -127,12 +137,119 @@ export class GuiImage extends BaseComponent {
       const x = (e.clientX - rect.left) * scaleX;
       const y = (e.clientY - rect.top) * scaleY;
 
-      console.log('Canvas clicked at:', { x, y, canvasSize: { w: canvas.width, h: canvas.height } });
-      this.image.addPoint(x, y);
+      // Check if clicking near an existing point (within 10px radius)
+      const points = this.image.morpherImage.points;
+      let clickedPointIndex = -1;
+      const clickRadius = 10;
+
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const distance = Math.sqrt((p.x - x) ** 2 + (p.y - y) ** 2);
+        if (distance < clickRadius) {
+          clickedPointIndex = i;
+          break;
+        }
+      }
+
+      if (clickedPointIndex !== -1) {
+        // Clicked on existing point - toggle selection
+        console.log('Point', clickedPointIndex, 'clicked');
+        this.togglePointSelection(clickedPointIndex);
+      } else {
+        // Clicked on empty area - add new point
+        console.log('Canvas clicked at:', { x, y, canvasSize: { w: canvas.width, h: canvas.height } });
+        this.image.addPoint(x, y);
+      }
+
+      // Redraw points after adding/selecting
+      this.drawPoints();
     };
 
     canvas.addEventListener('click', this._canvasClickHandler);
     console.log('Canvas click listener attached');
+
+    // Draw existing points
+    this.drawPoints();
+  }
+
+  /**
+   * Toggle point selection for triangle creation
+   */
+  togglePointSelection(pointIndex) {
+    const index = this.selectedPoints.indexOf(pointIndex);
+
+    if (index !== -1) {
+      // Deselect point
+      this.selectedPoints.splice(index, 1);
+      console.log('Point', pointIndex, 'deselected. Selected:', this.selectedPoints);
+    } else {
+      // Select point
+      this.selectedPoints.push(pointIndex);
+      console.log('Point', pointIndex, 'selected. Selected:', this.selectedPoints);
+
+      // If 3 points selected, create triangle
+      if (this.selectedPoints.length === 3) {
+        console.log('Creating triangle with points:', this.selectedPoints);
+        this.project.addTriangle(
+          this.selectedPoints[0],
+          this.selectedPoints[1],
+          this.selectedPoints[2]
+        );
+        // Clear selection after creating triangle
+        this.selectedPoints = [];
+        console.log('Triangle created, selection cleared');
+      }
+    }
+  }
+
+  /**
+   * Draw visual markers for mesh points on the canvas
+   */
+  drawPoints() {
+    const canvas = this.image.morpherImage.source;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const points = this.image.morpherImage.points;
+
+    // Save current canvas state
+    ctx.save();
+
+    // Redraw the base image first
+    if (this.image.morpherImage.loaded) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(this.image.morpherImage.el, 0, 0);
+    }
+
+    // Draw each point as a circle
+    if (points && points.length > 0) {
+      console.log(`Drawing ${points.length} points on canvas`);
+
+      points.forEach((point, index) => {
+        const isSelected = this.selectedPoints.includes(index);
+
+        // Draw point circle with different style if selected
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, isSelected ? 7 : 5, 0, Math.PI * 2);
+        ctx.fillStyle = isSelected ? '#ff6b6b' : '#4a9eff';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = isSelected ? 3 : 2;
+        ctx.stroke();
+
+        // Draw point number
+        ctx.fillStyle = '#ffffff';
+        ctx.font = isSelected ? 'bold 14px sans-serif' : 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(index, point.x, point.y);
+      });
+    }
+
+    // Restore canvas state
+    ctx.restore();
+
+    console.log('Points drawn on canvas');
   }
 
   attachEventListeners() {
