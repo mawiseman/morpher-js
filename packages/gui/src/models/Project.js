@@ -21,6 +21,9 @@
 import { generateId } from '../utils/id-generator.js';
 import { randomPastelColor } from '../utils/colors.js';
 import { Image } from './Image.js';
+import { createNamespace } from '../utils/storage.js';
+
+const STORAGE_NAMESPACE = 'morpher-gui';
 
 export class Project extends EventTarget {
   /**
@@ -336,8 +339,9 @@ export class Project extends EventTarget {
   save() {
     try {
       // Save with image data to persist uploaded images
+      const storage = createNamespace(STORAGE_NAMESPACE);
       const json = this.toJSON({ includeImageData: true });
-      localStorage.setItem(`project_${this.id}`, JSON.stringify(json));
+      storage.setItem(`project_${this.id}`, json);
       return true;
     } catch (e) {
       console.error('Failed to save project:', e);
@@ -345,8 +349,9 @@ export class Project extends EventTarget {
       if (e.name === 'QuotaExceededError') {
         console.warn('localStorage quota exceeded, saving without image data');
         try {
+          const storage = createNamespace(STORAGE_NAMESPACE);
           const json = this.toJSON({ includeImageData: false });
-          localStorage.setItem(`project_${this.id}`, JSON.stringify(json));
+          storage.setItem(`project_${this.id}`, json);
           return true;
         } catch (e2) {
           console.error('Failed to save even without image data:', e2);
@@ -373,7 +378,8 @@ export class Project extends EventTarget {
 
     // Remove from storage
     try {
-      localStorage.removeItem(`project_${this.id}`);
+      const storage = createNamespace(STORAGE_NAMESPACE);
+      storage.removeItem(`project_${this.id}`);
     } catch (e) {
       console.error('Failed to remove project from storage:', e);
     }

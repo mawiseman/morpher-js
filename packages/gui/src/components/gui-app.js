@@ -17,10 +17,7 @@ class GuiApp extends BaseComponent {
   connectedCallback() {
     super.connectedCallback();
 
-    // Ensure projects are loaded
-    if (projectStore.count() === 0) {
-      projectStore.load();
-    }
+    // ProjectStore auto-loads on module import, so no need to load here
   }
 
   addEventListeners() {
