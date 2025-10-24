@@ -43,10 +43,10 @@ class GuiProject extends BaseComponent {
     if (this.project) {
       this.project.removeEventListener('image:add', this.handleImageChange);
       this.project.removeEventListener('image:remove', this.handleImageChange);
-      this.project.removeEventListener('mesh:change', this.handleMeshChange);
       // Remove listeners from all images
       this.project.images.forEach((image) => {
         image.removeEventListener('change:src', this.handleImageChange);
+        image.removeEventListener('points:change', this.handleMeshChange);
       });
     }
 
@@ -60,12 +60,12 @@ class GuiProject extends BaseComponent {
 
       this.project.addEventListener('image:add', this.handleProjectImageAdd);
       this.project.addEventListener('image:remove', this.handleImageChange);
-      this.project.addEventListener('mesh:change', this.handleMeshChange);
 
-      // Listen to all existing images for src changes only
+      // Listen to all existing images for src and points changes
       // (weight changes are handled manually in the slider to avoid re-renders)
       this.project.images.forEach((image) => {
         image.addEventListener('change:src', this.handleImageChange);
+        image.addEventListener('points:change', this.handleMeshChange);
       });
     }
 
@@ -77,6 +77,7 @@ class GuiProject extends BaseComponent {
     const image = event.detail?.image;
     if (image) {
       image.addEventListener('change:src', this.handleImageChange);
+      image.addEventListener('points:change', this.handleMeshChange);
       // Don't listen to weight changes - handled manually in slider
     }
     this.render();
@@ -592,8 +593,11 @@ class GuiProject extends BaseComponent {
         // Draw image centered and scaled
         ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-        // Draw mesh overlay
-        this.drawMeshOverlay(ctx, offsetX, offsetY, drawWidth, drawHeight);
+        // Draw mesh overlay for this specific image
+        const projectImage = this.project.images.find(img => img.id === imageId);
+        if (projectImage) {
+          this.drawMeshOverlay(ctx, offsetX, offsetY, drawWidth, drawHeight, projectImage);
+        }
       };
 
       img.src = image.file;
@@ -607,21 +611,22 @@ class GuiProject extends BaseComponent {
    * @param {number} offsetY - Image Y offset
    * @param {number} width - Image width
    * @param {number} height - Image height
+   * @param {Image} image - Image model with points
    */
-  drawMeshOverlay(ctx, offsetX, offsetY, width, height) {
-    if (!this.project || !this.project.points || this.project.points.length === 0) {
+  drawMeshOverlay(ctx, offsetX, offsetY, width, height, image) {
+    if (!image || !image.points || image.points.length === 0) {
       return;
     }
 
-    // Draw triangles
+    // Draw triangles (shared across all images)
     if (this.project.triangles && this.project.triangles.length > 0) {
       ctx.strokeStyle = 'rgba(0, 123, 255, 0.5)';
       ctx.lineWidth = 1;
 
       this.project.triangles.forEach(([p1, p2, p3]) => {
-        const point1 = this.project.points[p1];
-        const point2 = this.project.points[p2];
-        const point3 = this.project.points[p3];
+        const point1 = image.points[p1];
+        const point2 = image.points[p2];
+        const point3 = image.points[p3];
 
         if (!point1 || !point2 || !point3) {
           return;
@@ -636,12 +641,12 @@ class GuiProject extends BaseComponent {
       });
     }
 
-    // Draw points
+    // Draw points for this specific image
     ctx.fillStyle = '#007bff';
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
 
-    this.project.points.forEach((point) => {
+    image.points.forEach((point) => {
       const x = offsetX + point.x * width;
       const y = offsetY + point.y * height;
 
@@ -725,9 +730,15 @@ class GuiProject extends BaseComponent {
     canvases.forEach(canvas => {
       let draggedPointIndex = null;
       let isDragging = false;
+      const imageId = canvas.dataset.imageId;
 
       this.addTrackedListener(canvas, 'mousedown', (e) => {
         if (!this.project) {
+          return;
+        }
+
+        const image = this.project.images.find(img => img.id === imageId);
+        if (!image) {
           return;
         }
 
@@ -743,7 +754,7 @@ class GuiProject extends BaseComponent {
         let nearestPoint = null;
         let nearestDistance = Infinity;
 
-        this.project.points.forEach((point, index) => {
+        image.points.forEach((point, index) => {
           const pointX = point.x * canvasWidth;
           const pointY = point.y * canvasHeight;
           const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
@@ -767,6 +778,11 @@ class GuiProject extends BaseComponent {
           return;
         }
 
+        const image = this.project.images.find(img => img.id === imageId);
+        if (!image) {
+          return;
+        }
+
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -774,16 +790,16 @@ class GuiProject extends BaseComponent {
         const canvasHeight = rect.height;
 
         if (isDragging && draggedPointIndex !== null) {
-          // Update point position while dragging
+          // Update point position while dragging on this specific image
           const normalizedX = Math.max(0, Math.min(1, x / canvasWidth));
           const normalizedY = Math.max(0, Math.min(1, y / canvasHeight));
-          this.project.updatePoint(draggedPointIndex, normalizedX, normalizedY);
+          image.updatePoint(draggedPointIndex, normalizedX, normalizedY);
         } else {
           // Update cursor when hovering over points
           const clickRadius = 10;
           let overPoint = false;
 
-          this.project.points.forEach((point) => {
+          image.points.forEach((point) => {
             const pointX = point.x * canvasWidth;
             const pointY = point.y * canvasHeight;
             const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
@@ -802,6 +818,11 @@ class GuiProject extends BaseComponent {
           return;
         }
 
+        const image = this.project.images.find(img => img.id === imageId);
+        if (!image) {
+          return;
+        }
+
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -814,10 +835,14 @@ class GuiProject extends BaseComponent {
           draggedPointIndex = null;
           canvas.style.cursor = 'crosshair';
         } else {
-          // Click without drag - add new point
+          // Click without drag - add new point to ALL images at same position
           const normalizedX = x / canvasWidth;
           const normalizedY = y / canvasHeight;
-          this.project.addPoint(normalizedX, normalizedY);
+
+          // Add to all images to keep them in sync
+          this.project.images.forEach(img => {
+            img.addPoint(normalizedX, normalizedY);
+          });
         }
       });
 

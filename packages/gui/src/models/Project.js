@@ -48,8 +48,7 @@ export class Project extends EventTarget {
     // Images collection
     this.images = [];
 
-    // Mesh data (points and triangles)
-    this.points = attrs.points || [];
+    // Mesh triangles (shared across all images)
     this.triangles = attrs.triangles || [];
 
     // Morpher instance will be created when needed
@@ -155,6 +154,14 @@ export class Project extends EventTarget {
       ? imageData
       : Image.fromJSON(imageData);
 
+    // Copy points from first image if this is a new image without points
+    if (this.images.length > 0 && image.points.length === 0) {
+      const firstImage = this.images[0];
+      if (firstImage.points.length > 0) {
+        image.setPoints(firstImage.points);
+      }
+    }
+
     this.images.push(image);
 
     // Add to morpher if available
@@ -165,6 +172,13 @@ export class Project extends EventTarget {
     // Listen to image changes
     image.addEventListener('change:weight', () => {
       this.handleWeightChange(image);
+    });
+
+    // Listen to point changes
+    image.addEventListener('points:change', () => {
+      if (!options.skipSave) {
+        this.save();
+      }
     });
 
     this.dispatchEvent(new CustomEvent('image:add', {
@@ -197,68 +211,6 @@ export class Project extends EventTarget {
 
       this.dispatchEvent(new CustomEvent('image:remove', {
         detail: { image, index, project: this }
-      }));
-
-      this.save();
-    }
-  }
-
-  /**
-   * Add a point to the mesh
-   * @param {number} x - X coordinate (0-1 normalized)
-   * @param {number} y - Y coordinate (0-1 normalized)
-   * @returns {number} Point index
-   */
-  addPoint(x, y) {
-    const point = { x, y };
-    this.points.push(point);
-
-    this.dispatchEvent(new CustomEvent('mesh:change', {
-      detail: { type: 'point:add', point, project: this }
-    }));
-
-    this.save();
-    return this.points.length - 1;
-  }
-
-  /**
-   * Update a point's position
-   * @param {number} index - Point index
-   * @param {number} x - X coordinate (0-1 normalized)
-   * @param {number} y - Y coordinate (0-1 normalized)
-   */
-  updatePoint(index, x, y) {
-    if (index >= 0 && index < this.points.length) {
-      this.points[index] = { x, y };
-
-      this.dispatchEvent(new CustomEvent('mesh:change', {
-        detail: { type: 'point:update', index, point: { x, y }, project: this }
-      }));
-
-      this.save();
-    }
-  }
-
-  /**
-   * Remove a point from the mesh
-   * @param {number} index - Point index
-   */
-  removePoint(index) {
-    if (index >= 0 && index < this.points.length) {
-      this.points.splice(index, 1);
-
-      // Remove triangles that reference this point
-      this.triangles = this.triangles.filter(tri =>
-        !tri.includes(index)
-      );
-
-      // Update triangle indices (decrement any index > removed index)
-      this.triangles = this.triangles.map(tri =>
-        tri.map(i => i > index ? i - 1 : i)
-      );
-
-      this.dispatchEvent(new CustomEvent('mesh:change', {
-        detail: { type: 'point:remove', index, project: this }
       }));
 
       this.save();
@@ -376,7 +328,6 @@ export class Project extends EventTarget {
       color: this._color,
       blend_function: this.blendFunction,
       final_touch_function: this.finalTouchFunction,
-      points: this.points,
       triangles: this.triangles,
       images: this.images.map(img => {
         const imgData = img.toJSON();

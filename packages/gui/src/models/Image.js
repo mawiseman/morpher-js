@@ -38,6 +38,9 @@ export class Image extends EventTarget {
     this.x = attrs.x ?? 0;
     this.y = attrs.y ?? 0;
 
+    // Mesh points for this image (normalized coordinates 0-1)
+    this.points = attrs.points || [];
+
     // Reference to Morpher library's Image instance (set by Project)
     this.morpherImage = null;
   }
@@ -207,6 +210,65 @@ export class Image extends EventTarget {
   }
 
   /**
+   * Add a point to this image's mesh
+   * @param {number} x - X coordinate (0-1 normalized)
+   * @param {number} y - Y coordinate (0-1 normalized)
+   * @returns {number} Point index
+   */
+  addPoint(x, y) {
+    const point = { x, y };
+    this.points.push(point);
+
+    this.dispatchEvent(new CustomEvent('points:change', {
+      detail: { type: 'point:add', point, image: this }
+    }));
+
+    return this.points.length - 1;
+  }
+
+  /**
+   * Update a point's position
+   * @param {number} index - Point index
+   * @param {number} x - X coordinate (0-1 normalized)
+   * @param {number} y - Y coordinate (0-1 normalized)
+   */
+  updatePoint(index, x, y) {
+    if (index >= 0 && index < this.points.length) {
+      this.points[index] = { x, y };
+
+      this.dispatchEvent(new CustomEvent('points:change', {
+        detail: { type: 'point:update', index, point: { x, y }, image: this }
+      }));
+    }
+  }
+
+  /**
+   * Remove a point from this image's mesh
+   * @param {number} index - Point index
+   */
+  removePoint(index) {
+    if (index >= 0 && index < this.points.length) {
+      this.points.splice(index, 1);
+
+      this.dispatchEvent(new CustomEvent('points:change', {
+        detail: { type: 'point:remove', index, image: this }
+      }));
+    }
+  }
+
+  /**
+   * Set all points (used for copying from another image)
+   * @param {Array} points - Array of {x, y} points
+   */
+  setPoints(points) {
+    this.points = points.map(p => ({ x: p.x, y: p.y })); // Deep copy
+
+    this.dispatchEvent(new CustomEvent('points:change', {
+      detail: { type: 'points:set', points: this.points, image: this }
+    }));
+  }
+
+  /**
    * Clean up resources
    */
   dispose() {
@@ -229,6 +291,7 @@ export class Image extends EventTarget {
       weight: this._weight,
       x: this.x,
       y: this.y,
+      points: this.points,
     };
   }
 
