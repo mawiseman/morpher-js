@@ -720,30 +720,114 @@ class GuiProject extends BaseComponent {
       this.addTrackedListener(slider, 'change', handleWeightChange);
     });
 
-    // Canvas click handling (add mesh points)
+    // Canvas interaction handling (add/drag mesh points)
     const canvases = this.queryAll('.image-canvas');
     canvases.forEach(canvas => {
-      this.addTrackedListener(canvas, 'click', (e) => {
+      let draggedPointIndex = null;
+      let isDragging = false;
+
+      this.addTrackedListener(canvas, 'mousedown', (e) => {
         if (!this.project) {
           return;
         }
 
-        // Get click position relative to canvas
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-
-        // Calculate image dimensions and offset (same as drawCanvases)
         const canvasWidth = rect.width;
         const canvasHeight = rect.height;
 
-        // We need to know the image aspect ratio to calculate the active area
-        // For now, add the point in canvas-normalized coordinates
-        const normalizedX = x / canvasWidth;
-        const normalizedY = y / canvasHeight;
+        // Check if clicking near an existing point
+        const clickRadius = 10; // pixels
 
-        // Add point to project
-        this.project.addPoint(normalizedX, normalizedY);
+        let nearestPoint = null;
+        let nearestDistance = Infinity;
+
+        this.project.points.forEach((point, index) => {
+          const pointX = point.x * canvasWidth;
+          const pointY = point.y * canvasHeight;
+          const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
+
+          if (distance < clickRadius && distance < nearestDistance) {
+            nearestPoint = index;
+            nearestDistance = distance;
+          }
+        });
+
+        if (nearestPoint !== null) {
+          // Start dragging existing point
+          draggedPointIndex = nearestPoint;
+          isDragging = true;
+          canvas.style.cursor = 'grabbing';
+        }
+      });
+
+      this.addTrackedListener(canvas, 'mousemove', (e) => {
+        if (!this.project) {
+          return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const canvasWidth = rect.width;
+        const canvasHeight = rect.height;
+
+        if (isDragging && draggedPointIndex !== null) {
+          // Update point position while dragging
+          const normalizedX = Math.max(0, Math.min(1, x / canvasWidth));
+          const normalizedY = Math.max(0, Math.min(1, y / canvasHeight));
+          this.project.updatePoint(draggedPointIndex, normalizedX, normalizedY);
+        } else {
+          // Update cursor when hovering over points
+          const clickRadius = 10;
+          let overPoint = false;
+
+          this.project.points.forEach((point) => {
+            const pointX = point.x * canvasWidth;
+            const pointY = point.y * canvasHeight;
+            const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
+
+            if (distance < clickRadius) {
+              overPoint = true;
+            }
+          });
+
+          canvas.style.cursor = overPoint ? 'grab' : 'crosshair';
+        }
+      });
+
+      this.addTrackedListener(canvas, 'mouseup', (e) => {
+        if (!this.project) {
+          return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const canvasWidth = rect.width;
+        const canvasHeight = rect.height;
+
+        if (isDragging) {
+          // Finished dragging
+          isDragging = false;
+          draggedPointIndex = null;
+          canvas.style.cursor = 'crosshair';
+        } else {
+          // Click without drag - add new point
+          const normalizedX = x / canvasWidth;
+          const normalizedY = y / canvasHeight;
+          this.project.addPoint(normalizedX, normalizedY);
+        }
+      });
+
+      this.addTrackedListener(canvas, 'mouseleave', () => {
+        // Stop dragging if mouse leaves canvas
+        if (isDragging) {
+          isDragging = false;
+          draggedPointIndex = null;
+          canvas.style.cursor = 'crosshair';
+        }
       });
     });
 
