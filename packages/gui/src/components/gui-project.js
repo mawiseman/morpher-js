@@ -242,6 +242,49 @@ class GuiProject extends BaseComponent {
 
         .weight-slider {
           width: 100%;
+          cursor: pointer;
+          pointer-events: auto;
+          user-select: none;
+          -webkit-user-select: none;
+          touch-action: none;
+        }
+
+        /* Better slider styling for interactivity */
+        .weight-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: var(--color-primary, #007bff);
+          cursor: pointer;
+          pointer-events: auto;
+        }
+
+        .weight-slider::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: var(--color-primary, #007bff);
+          cursor: pointer;
+          pointer-events: auto;
+          border: none;
+        }
+
+        .weight-slider::-webkit-slider-runnable-track {
+          width: 100%;
+          height: 6px;
+          background: var(--color-border, #ddd);
+          border-radius: 3px;
+          cursor: pointer;
+        }
+
+        .weight-slider::-moz-range-track {
+          width: 100%;
+          height: 6px;
+          background: var(--color-border, #ddd);
+          border-radius: 3px;
+          cursor: pointer;
         }
 
         .image-actions {
@@ -399,7 +442,7 @@ class GuiProject extends BaseComponent {
     // Weight sliders
     const sliders = this.queryAll('.weight-slider');
     sliders.forEach(slider => {
-      this.addTrackedListener(slider, 'input', (e) => {
+      const handleWeightChange = (e) => {
         const imageId = e.target.dataset.imageId;
         const value = parseFloat(e.target.value);
         const image = this.project.images.find(img => img.id === imageId);
@@ -416,7 +459,11 @@ class GuiProject extends BaseComponent {
             }
           }
         }
-      });
+      };
+
+      // Listen to both input (while dragging) and change (on release)
+      this.addTrackedListener(slider, 'input', handleWeightChange);
+      this.addTrackedListener(slider, 'change', handleWeightChange);
     });
 
     // Delete buttons
