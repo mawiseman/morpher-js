@@ -43,6 +43,11 @@ class GuiProject extends BaseComponent {
     if (this.project) {
       this.project.removeEventListener('image:add', this.handleImageChange);
       this.project.removeEventListener('image:remove', this.handleImageChange);
+      // Remove listeners from all images
+      this.project.images.forEach((image) => {
+        image.removeEventListener('change:src', this.handleImageChange);
+        image.removeEventListener('change:weight', this.handleImageChange);
+      });
     }
 
     // Load new project
@@ -51,12 +56,28 @@ class GuiProject extends BaseComponent {
     if (this.project) {
       // Listen to project changes
       this.handleImageChange = () => this.render();
-      this.project.addEventListener('image:add', this.handleImageChange);
+      this.project.addEventListener('image:add', this.handleProjectImageAdd);
       this.project.addEventListener('image:remove', this.handleImageChange);
+
+      // Listen to all existing images
+      this.project.images.forEach((image) => {
+        image.addEventListener('change:src', this.handleImageChange);
+        image.addEventListener('change:weight', this.handleImageChange);
+      });
     }
 
     this.render();
   }
+
+  handleProjectImageAdd = (event) => {
+    // When a new image is added, attach listeners to it
+    const image = event.detail?.image;
+    if (image) {
+      image.addEventListener('change:src', this.handleImageChange);
+      image.addEventListener('change:weight', this.handleImageChange);
+    }
+    this.render();
+  };
 
   addEventListeners() {
     // Add image button
