@@ -1,16 +1,60 @@
 /**
  * Root Application Component
  *
- * This is the main entry point for the GUI application.
- * It will be enhanced with full functionality in later tasks.
+ * Main entry point for the MorpherJS GUI application.
+ * Coordinates the menu bar and main content area.
+ *
+ * Events:
+ * - None (root component)
  */
 
 import { BaseComponent } from './base/BaseComponent.js';
+import { projectStore } from '../models/ProjectStore.js';
+import './gui-menu-bar.js';
+import './gui-main.js';
 
 class GuiApp extends BaseComponent {
   connectedCallback() {
     super.connectedCallback();
-    // Additional initialization will be added here
+
+    // Ensure projects are loaded
+    if (projectStore.count() === 0) {
+      projectStore.load();
+    }
+  }
+
+  addEventListeners() {
+    // Listen to menu bar events
+    const menuBar = this.query('gui-menu-bar');
+    if (menuBar) {
+      this.addTrackedListener(menuBar, 'help-click', () => {
+        this.showHelp();
+      });
+    }
+  }
+
+  showHelp() {
+    alert(`MorpherJS GUI
+
+A modern image morphing editor built with Web Components.
+
+Features:
+- Create multiple morphing projects
+- Add images via file upload
+- Adjust blend weights
+- Edit mesh points (coming soon)
+- Export configurations
+
+Controls:
+- Click project name to rename
+- Use ◀ ▶ to navigate between projects
+- Click "New" to create a project
+- Click "Delete" to remove current project
+- Click "Add Image" to upload images
+- Adjust sliders to set blend weights
+
+For more information, visit:
+https://github.com/anthropics/morpher-js`);
   }
 
   render() {
@@ -20,48 +64,15 @@ class GuiApp extends BaseComponent {
           display: block;
           width: 100%;
           min-height: 100vh;
-        }
-
-        .container {
-          padding: var(--spacing-lg);
-          text-align: center;
-        }
-
-        h1 {
-          font-size: var(--font-size-xl);
-          color: var(--color-text-primary);
-          margin-bottom: var(--spacing-md);
-        }
-
-        p {
-          font-size: var(--font-size-base);
-          color: var(--color-text-secondary);
-        }
-
-        .status {
-          display: inline-block;
-          padding: var(--spacing-sm) var(--spacing-md);
-          background-color: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          margin-top: var(--spacing-md);
-        }
-
-        .success {
-          color: #22c55e;
-          font-weight: var(--font-weight-medium);
+          background-color: var(--color-background, #f5f5f5);
         }
       </style>
 
-      <div class="container">
-        <h1>MorpherJS GUI</h1>
-        <p>Web Components + Vite Build System</p>
-        <div class="status">
-          <p class="success">✓ BaseComponent infrastructure ready</p>
-          <p class="success">✓ 28/28 tests passing</p>
-        </div>
-      </div>
+      <gui-menu-bar></gui-menu-bar>
+      <gui-main></gui-main>
     `;
+
+    this.addEventListeners();
   }
 }
 

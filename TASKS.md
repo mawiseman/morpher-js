@@ -61,17 +61,17 @@ This file tracks tasks for building the new GUI application using Vite and Web C
 ## Phase 3: Core Components
 
 ### Root Components
-- [ ] Create `<gui-app>` root component
-- [ ] Create `<gui-menu-bar>` component
-- [ ] Create `<gui-main>` container component
-- [ ] Test app initialization and rendering
+- [x] Create `<gui-app>` root component
+- [x] Create `<gui-menu-bar>` component
+- [x] Create `<gui-main>` container component
+- [x] Test app initialization and rendering
 
 ### Project Management
-- [ ] Create `<gui-project>` component
-- [ ] Implement project switching logic
-- [ ] Implement add/delete project functionality
-- [ ] Implement project rename functionality
-- [ ] Add project color theming
+- [x] Create `<gui-project>` component
+- [x] Implement project switching logic
+- [x] Implement add/delete project functionality
+- [x] Implement project rename functionality
+- [x] Add project color theming
 
 ---
 
@@ -183,7 +183,7 @@ This file tracks tasks for building the new GUI application using Vite and Web C
 
 ## Notes
 
-**Current Focus:** Phase 2 - State Management (Complete ✅)
+**Current Focus:** Phase 3 - Core Components (Complete ✅)
 
 **Completed:**
 - Phase 1: Foundation & Setup (20/20 tasks) ✅
@@ -194,6 +194,14 @@ This file tracks tasks for building the new GUI application using Vite and Web C
   - Data Models (Image, Project, ProjectStore)
   - localStorage persistence
   - Comprehensive test coverage
+- Phase 3: Core Components (9/9 tasks) ✅
+  - Root app component with menu bar and main content
+  - Project navigation with wrap-around
+  - Inline editable project names
+  - Add/delete project functionality
+  - Image upload and management
+  - Weight sliders for blend control
+  - Project color theming
 
 **Test Results:**
 - BaseComponent: 28/28 tests passing ✅
@@ -206,7 +214,7 @@ This file tracks tasks for building the new GUI application using Vite and Web C
 **Blockers:** None
 
 **Next Steps:**
-1. Proceed to Phase 3: Core Components
-2. Create `<gui-app>` root component
-3. Create `<gui-menu-bar>` component
-4. Create `<gui-main>` container component
+1. Proceed to Phase 4: Image Editing Components
+2. Create `<gui-image-tile>` with canvas rendering
+3. Create `<gui-point>` and `<gui-midpoint>` for mesh editing
+4. Implement drag-and-drop file upload
