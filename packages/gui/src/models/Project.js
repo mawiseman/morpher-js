@@ -174,11 +174,10 @@ export class Project extends EventTarget {
       this.handleWeightChange(image);
     });
 
-    // Listen to point changes
+    // Listen to point changes and always save
+    // (skipSave only applies to initial project load, not ongoing changes)
     image.addEventListener('points:change', () => {
-      if (!options.skipSave) {
-        this.save();
-      }
+      this.save();
     });
 
     this.dispatchEvent(new CustomEvent('image:add', {
