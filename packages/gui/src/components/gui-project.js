@@ -43,6 +43,7 @@ class GuiProject extends BaseComponent {
     if (this.project) {
       this.project.removeEventListener('image:add', this.handleImageChange);
       this.project.removeEventListener('image:remove', this.handleImageChange);
+      this.project.removeEventListener('mesh:change', this.handleMeshChange);
       // Remove listeners from all images
       this.project.images.forEach((image) => {
         image.removeEventListener('change:src', this.handleImageChange);
@@ -55,8 +56,11 @@ class GuiProject extends BaseComponent {
     if (this.project) {
       // Listen to project changes
       this.handleImageChange = () => this.render();
+      this.handleMeshChange = () => this.drawCanvases();
+
       this.project.addEventListener('image:add', this.handleProjectImageAdd);
       this.project.addEventListener('image:remove', this.handleImageChange);
+      this.project.addEventListener('mesh:change', this.handleMeshChange);
 
       // Listen to all existing images for src changes only
       // (weight changes are handled manually in the slider to avoid re-renders)
@@ -587,9 +591,64 @@ class GuiProject extends BaseComponent {
 
         // Draw image centered and scaled
         ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+        // Draw mesh overlay
+        this.drawMeshOverlay(ctx, offsetX, offsetY, drawWidth, drawHeight);
       };
 
       img.src = image.file;
+    });
+  }
+
+  /**
+   * Draw mesh overlay (points and triangles) on canvas
+   * @param {CanvasRenderingContext2D} ctx - Canvas context
+   * @param {number} offsetX - Image X offset
+   * @param {number} offsetY - Image Y offset
+   * @param {number} width - Image width
+   * @param {number} height - Image height
+   */
+  drawMeshOverlay(ctx, offsetX, offsetY, width, height) {
+    if (!this.project || !this.project.points || this.project.points.length === 0) {
+      return;
+    }
+
+    // Draw triangles
+    if (this.project.triangles && this.project.triangles.length > 0) {
+      ctx.strokeStyle = 'rgba(0, 123, 255, 0.5)';
+      ctx.lineWidth = 1;
+
+      this.project.triangles.forEach(([p1, p2, p3]) => {
+        const point1 = this.project.points[p1];
+        const point2 = this.project.points[p2];
+        const point3 = this.project.points[p3];
+
+        if (!point1 || !point2 || !point3) {
+          return;
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(offsetX + point1.x * width, offsetY + point1.y * height);
+        ctx.lineTo(offsetX + point2.x * width, offsetY + point2.y * height);
+        ctx.lineTo(offsetX + point3.x * width, offsetY + point3.y * height);
+        ctx.closePath();
+        ctx.stroke();
+      });
+    }
+
+    // Draw points
+    ctx.fillStyle = '#007bff';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+
+    this.project.points.forEach((point) => {
+      const x = offsetX + point.x * width;
+      const y = offsetY + point.y * height;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
     });
   }
 
@@ -659,6 +718,33 @@ class GuiProject extends BaseComponent {
       // change = on release (save to localStorage)
       this.addTrackedListener(slider, 'input', handleWeightInput);
       this.addTrackedListener(slider, 'change', handleWeightChange);
+    });
+
+    // Canvas click handling (add mesh points)
+    const canvases = this.queryAll('.image-canvas');
+    canvases.forEach(canvas => {
+      this.addTrackedListener(canvas, 'click', (e) => {
+        if (!this.project) {
+          return;
+        }
+
+        // Get click position relative to canvas
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Calculate image dimensions and offset (same as drawCanvases)
+        const canvasWidth = rect.width;
+        const canvasHeight = rect.height;
+
+        // We need to know the image aspect ratio to calculate the active area
+        // For now, add the point in canvas-normalized coordinates
+        const normalizedX = x / canvasWidth;
+        const normalizedY = y / canvasHeight;
+
+        // Add point to project
+        this.project.addPoint(normalizedX, normalizedY);
+      });
     });
 
     // Delete buttons
