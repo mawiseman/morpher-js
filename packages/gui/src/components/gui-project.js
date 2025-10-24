@@ -727,10 +727,11 @@ class GuiProject extends BaseComponent {
 
     // Canvas interaction handling (add/drag mesh points)
     const canvases = this.queryAll('.image-canvas');
-    canvases.forEach(canvas => {
+    canvases.forEach((canvas, canvasIndex) => {
       let draggedPointIndex = null;
       let isDragging = false;
       const imageId = canvas.dataset.imageId;
+      const isFirstImage = canvasIndex === 0;
 
       this.addTrackedListener(canvas, 'mousedown', (e) => {
         // Only handle left-click (button 0)
@@ -814,7 +815,13 @@ class GuiProject extends BaseComponent {
             }
           });
 
-          canvas.style.cursor = overPoint ? 'grab' : 'crosshair';
+          // First image: crosshair for adding points, grab for dragging
+          // Other images: default cursor (no adding), grab for dragging
+          if (overPoint) {
+            canvas.style.cursor = 'grab';
+          } else {
+            canvas.style.cursor = isFirstImage ? 'crosshair' : 'default';
+          }
         }
       });
 
@@ -843,9 +850,10 @@ class GuiProject extends BaseComponent {
           // Finished dragging
           isDragging = false;
           draggedPointIndex = null;
-          canvas.style.cursor = 'crosshair';
-        } else {
+          canvas.style.cursor = isFirstImage ? 'crosshair' : 'default';
+        } else if (isFirstImage) {
           // Click without drag - add new point to ALL images at same position
+          // (only allowed on first image)
           const normalizedX = x / canvasWidth;
           const normalizedY = y / canvasHeight;
 
@@ -861,12 +869,17 @@ class GuiProject extends BaseComponent {
         if (isDragging) {
           isDragging = false;
           draggedPointIndex = null;
-          canvas.style.cursor = 'crosshair';
+          canvas.style.cursor = isFirstImage ? 'crosshair' : 'default';
         }
       });
 
       this.addTrackedListener(canvas, 'contextmenu', (e) => {
         e.preventDefault(); // Prevent default context menu
+
+        // Only allow deletion on first image
+        if (!isFirstImage) {
+          return;
+        }
 
         if (!this.project) {
           return;
