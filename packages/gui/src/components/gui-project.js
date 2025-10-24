@@ -269,8 +269,8 @@ class GuiProject extends BaseComponent {
         }
 
         .image-canvas {
-          max-width: 100%;
-          max-height: 100%;
+          width: 100%;
+          height: 100%;
           display: block;
           image-rendering: auto;
         }
@@ -468,8 +468,6 @@ class GuiProject extends BaseComponent {
                   <canvas
                     class="image-canvas"
                     data-image-id="${image.id}"
-                    width="300"
-                    height="300"
                   ></canvas>
                   ${!image.file ? `
                     <div class="canvas-placeholder">Loading...</div>
@@ -554,6 +552,11 @@ class GuiProject extends BaseComponent {
         // (in case DOM was updated between starting load and onload firing)
         const canvas = this.query(`.image-canvas[data-image-id="${imageId}"]`);
         if (!canvas) return; // Canvas might have been removed
+
+        // Set canvas dimensions to match its rendered size
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
 
         const ctx = canvas.getContext('2d');
 
