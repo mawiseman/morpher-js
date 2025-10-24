@@ -335,11 +335,24 @@ export class Project extends EventTarget {
    */
   save() {
     try {
-      const json = this.toJSON({ includeImageData: false });
+      // Save with image data to persist uploaded images
+      const json = this.toJSON({ includeImageData: true });
       localStorage.setItem(`project_${this.id}`, JSON.stringify(json));
       return true;
     } catch (e) {
       console.error('Failed to save project:', e);
+      // If quota exceeded, try without image data
+      if (e.name === 'QuotaExceededError') {
+        console.warn('localStorage quota exceeded, saving without image data');
+        try {
+          const json = this.toJSON({ includeImageData: false });
+          localStorage.setItem(`project_${this.id}`, JSON.stringify(json));
+          return true;
+        } catch (e2) {
+          console.error('Failed to save even without image data:', e2);
+          return false;
+        }
+      }
       return false;
     }
   }

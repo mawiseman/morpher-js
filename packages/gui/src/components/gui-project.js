@@ -110,13 +110,17 @@ class GuiProject extends BaseComponent {
 
     for (const file of files) {
       try {
+        // Add image without auto-save (file data not loaded yet)
         const image = this.project.addImage({
           url: file.name,
           targetWeight: 0,
-        });
+        }, { skipSave: true });
 
-        // Load the file
+        // Load the file data
         await image.setSrc(file);
+
+        // Now save with the loaded image data
+        this.project.save();
 
         this.emit('image-add', { image });
       } catch (error) {
