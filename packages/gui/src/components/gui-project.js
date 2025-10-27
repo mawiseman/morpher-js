@@ -320,73 +320,12 @@ class GuiProject extends BaseComponent {
     });
   }
 
-  async handleFileSelect(event) {
-    const files = event.target.files;
-    const target = event.target;
-    if (!files || files.length === 0 || !this.project) return;
-
-    await this.processFiles(files);
-
-    // Reset input (if it still exists after re-render)
-    if (target) {
-      target.value = '';
-    }
-  }
-
-  async handleDrop(event) {
-    const files = event.dataTransfer.files;
-    if (!files || files.length === 0) return;
-
-    // Filter to only image files
-    const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
-
-    if (imageFiles.length === 0) {
-      alert('Please drop image files only');
-      return;
-    }
-
-    await this.processFiles(imageFiles);
-  }
-
-  async processFiles(files) {
-    if (!this.project) return;
-
-    for (const file of files) {
-      try {
-        // Add image without auto-save (file data not loaded yet)
-        const image = this.project.addImage({
-          url: file.name,
-          targetWeight: 0,
-        }, { skipSave: true });
-
-        // Load the file data
-        await image.setSrc(file);
-
-        // Now save with the loaded image data
-        this.project.save();
-
-        this.emit('image-add', { image });
-      } catch (error) {
-        console.error('Error loading image:', error);
-        alert(`Failed to load image: ${file.name}`);
-      }
-    }
-  }
-
-  render() {
-    if (!this.project) {
-      this.shadowRoot.innerHTML = `
-        <div style="padding: 20px; text-align: center; color: #999;">
-          Project not found
-        </div>
-      `;
-      return;
-    }
-
-    const images = this.project.images;
-    const hasImages = images.length > 0;
-
-    this.shadowRoot.innerHTML = `
+  /**
+   * Get component styles
+   * @returns {string} CSS styles for the component
+   */
+  getStyles() {
+    return `
       <style>
         :host {
           display: block;
@@ -518,21 +457,17 @@ class GuiProject extends BaseComponent {
         }
 
         .url-input {
+          width: 100%;
           padding: 6px 8px;
           border: 1px solid var(--color-border, #ddd);
           border-radius: 4px;
           font-size: var(--font-size-sm, 14px);
-          font-family: inherit;
-          transition: border-color 0.2s ease;
+          transition: border-color var(--transition-fast, 150ms ease);
         }
 
         .url-input:focus {
           outline: none;
           border-color: var(--color-primary, #007bff);
-        }
-
-        .url-input::placeholder {
-          color: var(--color-text-secondary, #999);
         }
 
         .weight-control {
@@ -542,87 +477,48 @@ class GuiProject extends BaseComponent {
         }
 
         .weight-label {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           font-size: var(--font-size-sm, 14px);
           color: var(--color-text-secondary, #666);
         }
 
+        .weight-value {
+          font-weight: 600;
+          color: var(--color-primary, #007bff);
+        }
+
         .weight-slider {
-          -webkit-appearance: none;
-          appearance: none;
           width: 100%;
           height: 6px;
           border-radius: 3px;
           background: var(--color-border, #ddd);
           outline: none;
+          -webkit-appearance: none;
+          appearance: none;
           cursor: pointer;
         }
 
-        /* Webkit (Chrome, Safari, Edge) - Track */
-        .weight-slider::-webkit-slider-runnable-track {
-          width: 100%;
-          height: 6px;
-          border-radius: 3px;
-          background: transparent;
-        }
-
-        /* Webkit - Thumb */
         .weight-slider::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 18px;
-          height: 18px;
+          width: 16px;
+          height: 16px;
           border-radius: 50%;
           background: var(--color-primary, #007bff);
-          cursor: grab;
-          margin-top: -6px; /* Centers thumb on track (18px - 6px) / 2 */
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-          transition: transform 0.1s ease;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        .weight-slider::-webkit-slider-thumb:hover {
-          transform: scale(1.1);
-        }
-
-        .weight-slider::-webkit-slider-thumb:active {
-          cursor: grabbing;
-          transform: scale(1.15);
-        }
-
-        /* Firefox - Track */
-        .weight-slider::-moz-range-track {
-          width: 100%;
-          height: 6px;
-          border-radius: 3px;
-          background: var(--color-border, #ddd);
-          border: none;
-        }
-
-        /* Firefox - Thumb */
         .weight-slider::-moz-range-thumb {
-          width: 18px;
-          height: 18px;
+          width: 16px;
+          height: 16px;
           border-radius: 50%;
           background: var(--color-primary, #007bff);
-          cursor: grab;
+          cursor: pointer;
           border: none;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-          transition: transform 0.1s ease;
-        }
-
-        .weight-slider::-moz-range-thumb:hover {
-          transform: scale(1.1);
-        }
-
-        .weight-slider::-moz-range-thumb:active {
-          cursor: grabbing;
-          transform: scale(1.15);
-        }
-
-        /* Firefox - Progress (filled portion) */
-        .weight-slider::-moz-range-progress {
-          height: 6px;
-          border-radius: 3px;
-          background: var(--color-primary, #007bff);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .image-actions {
@@ -630,34 +526,19 @@ class GuiProject extends BaseComponent {
           gap: var(--spacing-xs, 4px);
         }
 
-        .btn {
-          padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-          background: var(--color-primary, #007bff);
+        .btn-remove {
+          flex: 1;
+          padding: 8px 12px;
+          background: var(--color-danger, #dc3545);
           color: white;
           border: none;
           border-radius: 4px;
-          cursor: pointer;
           font-size: var(--font-size-sm, 14px);
+          cursor: pointer;
           transition: background var(--transition-fast, 150ms ease);
         }
 
-        .btn:hover {
-          background: var(--color-primary-hover, #0056b3);
-        }
-
-        .btn-secondary {
-          background: var(--color-secondary, #6c757d);
-        }
-
-        .btn-secondary:hover {
-          background: var(--color-secondary-hover, #545b62);
-        }
-
-        .btn-danger {
-          background: var(--color-danger, #dc3545);
-        }
-
-        .btn-danger:hover {
+        .btn-remove:hover {
           background: var(--color-danger-hover, #c82333);
         }
 
@@ -856,6 +737,77 @@ class GuiProject extends BaseComponent {
           color: white;
         }
       </style>
+    `;
+  }
+
+  async handleFileSelect(event) {
+    const files = event.target.files;
+    const target = event.target;
+    if (!files || files.length === 0 || !this.project) return;
+
+    await this.processFiles(files);
+
+    // Reset input (if it still exists after re-render)
+    if (target) {
+      target.value = '';
+    }
+  }
+
+  async handleDrop(event) {
+    const files = event.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    // Filter to only image files
+    const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      alert('Please drop image files only');
+      return;
+    }
+
+    await this.processFiles(imageFiles);
+  }
+
+  async processFiles(files) {
+    if (!this.project) return;
+
+    for (const file of files) {
+      try {
+        // Add image without auto-save (file data not loaded yet)
+        const image = this.project.addImage({
+          url: file.name,
+          targetWeight: 0,
+        }, { skipSave: true });
+
+        // Load the file data
+        await image.setSrc(file);
+
+        // Now save with the loaded image data
+        this.project.save();
+
+        this.emit('image-add', { image });
+      } catch (error) {
+        console.error('Error loading image:', error);
+        alert(`Failed to load image: ${file.name}`);
+      }
+    }
+  }
+
+  render() {
+    if (!this.project) {
+      this.shadowRoot.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #999;">
+          Project not found
+        </div>
+      `;
+      return;
+    }
+
+    const images = this.project.images;
+    const hasImages = images.length > 0;
+
+    this.shadowRoot.innerHTML = `
+      ${this.getStyles()}
 
       <div class="project" style="--zoom-level: ${this.zoomLevel}">
         ${hasImages ? `
@@ -1536,8 +1488,9 @@ class GuiProject extends BaseComponent {
       this.morpher.canvas = previewCanvas;
       this.morpher.ctx = previewCanvas.getContext('2d');
 
-      // Use normal blending instead of additive (lighter) blending
-      this.morpher.blendFunction = Morpher.normalBlendFunction;
+      // Use default (additive/lighter) blending for proper morphing with triangles
+      // normalBlendFunction just fades between images without triangle transformation
+      this.morpher.blendFunction = Morpher.defaultBlendFunction;
 
       // Listen for draw events
       this.morpher.addEventListener('draw', (e) => {
