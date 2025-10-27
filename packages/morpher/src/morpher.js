@@ -386,7 +386,9 @@ export class Morpher extends EventDispatcher {
 
     const blend = this.blendFunction || Morpher.defaultBlendFunction;
 
-    if (this.canvas.width > 0 && this.canvas.height > 0) {
+    // Check both canvas and tmpCanvas are valid before drawing
+    if (this.canvas.width > 0 && this.canvas.height > 0 &&
+        this.tmpCanvas.width > 0 && this.tmpCanvas.height > 0) {
       const sortedImages = this.images.slice().sort((a, b) => b.weight - a.weight);
 
       for (const image of sortedImages) {

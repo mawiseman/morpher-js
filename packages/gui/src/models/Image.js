@@ -39,7 +39,21 @@ export class Image extends EventTarget {
     this.y = attrs.y ?? 0;
 
     // Mesh points for this image (normalized coordinates 0-1)
+    // Points now have format: { id: number, x: number, y: number }
     this.points = attrs.points || [];
+
+    // Track next available point ID
+    this.nextPointId = attrs.nextPointId || 0;
+
+    // If we have points without IDs, assign them IDs now
+    if (this.points.length > 0 && !this.points[0].hasOwnProperty('id')) {
+      this.points = this.points.map((p, idx) => ({
+        id: idx,
+        x: p.x,
+        y: p.y
+      }));
+      this.nextPointId = this.points.length;
+    }
 
     // Reference to Morpher library's Image instance (set by Project)
     this.morpherImage = null;
@@ -213,55 +227,67 @@ export class Image extends EventTarget {
    * Add a point to this image's mesh
    * @param {number} x - X coordinate (0-1 normalized)
    * @param {number} y - Y coordinate (0-1 normalized)
-   * @returns {number} Point index
+   * @param {number} [id] - Optional point ID (if not provided, will auto-increment)
+   * @returns {number} Point ID
    */
-  addPoint(x, y) {
-    const point = { x, y };
+  addPoint(x, y, id = null) {
+    // Use provided ID or generate new one
+    const pointId = id !== null ? id : this.nextPointId++;
+
+    const point = { id: pointId, x, y };
     this.points.push(point);
+
+    // Ensure nextPointId is always larger than any existing ID
+    if (id !== null && id >= this.nextPointId) {
+      this.nextPointId = id + 1;
+    }
 
     this.dispatchEvent(new CustomEvent('points:change', {
       detail: { type: 'point:add', point, image: this }
     }));
 
-    return this.points.length - 1;
+    return pointId;
   }
 
   /**
-   * Update a point's position
-   * @param {number} index - Point index
+   * Update a point's position by ID
+   * @param {number} id - Point ID
    * @param {number} x - X coordinate (0-1 normalized)
    * @param {number} y - Y coordinate (0-1 normalized)
    */
-  updatePoint(index, x, y) {
-    if (index >= 0 && index < this.points.length) {
-      this.points[index] = { x, y };
+  updatePoint(id, x, y) {
+    const point = this.points.find(p => p.id === id);
+    if (point) {
+      point.x = x;
+      point.y = y;
 
       this.dispatchEvent(new CustomEvent('points:change', {
-        detail: { type: 'point:update', index, point: { x, y }, image: this }
+        detail: { type: 'point:update', id, point, image: this }
       }));
     }
   }
 
   /**
-   * Remove a point from this image's mesh
-   * @param {number} index - Point index
+   * Remove a point from this image's mesh by ID
+   * @param {number} id - Point ID
    */
-  removePoint(index) {
-    if (index >= 0 && index < this.points.length) {
+  removePoint(id) {
+    const index = this.points.findIndex(p => p.id === id);
+    if (index !== -1) {
       this.points.splice(index, 1);
 
       this.dispatchEvent(new CustomEvent('points:change', {
-        detail: { type: 'point:remove', index, image: this }
+        detail: { type: 'point:remove', id, image: this }
       }));
     }
   }
 
   /**
    * Set all points (used for copying from another image)
-   * @param {Array} points - Array of {x, y} points
+   * @param {Array} points - Array of {id, x, y} points
    */
   setPoints(points) {
-    this.points = points.map(p => ({ x: p.x, y: p.y })); // Deep copy
+    this.points = points.map(p => ({ id: p.id, x: p.x, y: p.y })); // Deep copy
 
     this.dispatchEvent(new CustomEvent('points:change', {
       detail: { type: 'points:set', points: this.points, image: this }
@@ -292,6 +318,7 @@ export class Image extends EventTarget {
       x: this.x,
       y: this.y,
       points: this.points,
+      nextPointId: this.nextPointId,
     };
   }
 

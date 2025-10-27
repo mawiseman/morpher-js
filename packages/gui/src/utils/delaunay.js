@@ -17,21 +17,24 @@ export function triangulate(points) {
     return [];
   }
 
+  // Create a copy of points to avoid mutating the input
+  const workingPoints = points.slice();
+
   // Create super-triangle that contains all points
-  const superTriangle = createSuperTriangle(points);
+  const superTriangle = createSuperTriangle(workingPoints);
 
   // Initialize triangulation with super-triangle
   const triangles = [superTriangle];
 
-  // Add each point one at a time
+  // Add each point one at a time (using original count, not working array)
   for (let i = 0; i < points.length; i++) {
-    const point = points[i];
+    const point = workingPoints[i];
     const badTriangles = [];
 
     // Find all triangles whose circumcircle contains the point
     for (let j = triangles.length - 1; j >= 0; j--) {
       const triangle = triangles[j];
-      if (inCircumcircle(point, triangle, points)) {
+      if (inCircumcircle(point, triangle, workingPoints)) {
         badTriangles.push(triangle);
         triangles.splice(j, 1);
       }
@@ -66,6 +69,7 @@ export function triangulate(points) {
   }
 
   // Remove triangles that contain super-triangle vertices
+  // (super-triangle vertices are at indices >= original points.length)
   const result = triangles.filter(triangle => {
     return triangle[0] < points.length &&
            triangle[1] < points.length &&
@@ -120,6 +124,10 @@ function inCircumcircle(point, triangle, points) {
   const p2 = points[triangle[1]];
   const p3 = points[triangle[2]];
 
+  if (!p1 || !p2 || !p3) {
+    return false;
+  }
+
   const ax = p1.x - point.x;
   const ay = p1.y - point.y;
   const bx = p2.x - point.x;
@@ -132,7 +140,8 @@ function inCircumcircle(point, triangle, points) {
     (bx * bx + by * by) * (ax * cy - cx * ay) +
     (cx * cx + cy * cy) * (ax * by - bx * ay);
 
-  return det > 0;
+  // For counter-clockwise triangles, det < 0 means point is inside
+  return det < 0;
 }
 
 /**

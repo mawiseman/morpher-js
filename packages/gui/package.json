@@ -25,7 +25,8 @@
   "author": "Paweł Bator",
   "license": "MIT",
   "dependencies": {
-    "lit-html": "^3.1.0"
+    "lit-html": "^3.1.0",
+    "morpher-js": "file:../morpher"
   },
   "devDependencies": {
     "@vitest/ui": "^1.0.0",

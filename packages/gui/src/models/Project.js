@@ -155,6 +155,18 @@ export class Project extends EventTarget {
       ? imageData
       : Image.fromJSON(imageData);
 
+    // Set default weight: first image gets 1.0, others get 0.0
+    // Only set defaults if weight is not already defined (i.e., new image, not loaded from storage)
+    if (image.targetWeight === undefined || image.targetWeight === null) {
+      if (this.images.length === 0) {
+        image.targetWeight = 1.0;
+        image._weight = 1.0;
+      } else {
+        image.targetWeight = 0.0;
+        image._weight = 0.0;
+      }
+    }
+
     // Copy points from first image if this is a new image without points
     if (this.images.length > 0 && image.points.length === 0) {
       const firstImage = this.images[0];
@@ -232,12 +244,6 @@ export class Project extends EventTarget {
     const points = this.images[0].points;
     this.triangles = triangulate(points);
 
-    console.log('[Project] Auto-triangulated:', {
-      pointCount: points.length,
-      triangleCount: this.triangles.length,
-      triangles: this.triangles
-    });
-
     this.dispatchEvent(new CustomEvent('mesh:change', {
       detail: { type: 'triangulation', triangles: this.triangles, project: this }
     }));
@@ -313,32 +319,58 @@ export class Project extends EventTarget {
   handleWeightChange(changedImage) {
     if (this.images.length <= 1) return;
 
-    // Calculate total weight of other images
-    const otherImages = this.images.filter(img => img !== changedImage);
-    const totalOtherWeight = otherImages.reduce((sum, img) => sum + img.targetWeight, 0);
+    // Prevent infinite recursion
+    if (this._isNormalizingWeights) return;
+    this._isNormalizingWeights = true;
 
-    // Calculate remaining weight to distribute
-    const remainingWeight = 1 - changedImage.targetWeight;
+    try {
+      // Calculate total weight of other images (before normalization)
+      const otherImages = this.images.filter(img => img !== changedImage);
+      const totalOtherWeight = otherImages.reduce((sum, img) => sum + img.targetWeight, 0);
 
-    if (remainingWeight <= 0) {
-      // If changed image has weight 1, set all others to 0
-      otherImages.forEach(img => {
-        img.weight = 0;
-      });
-    } else if (totalOtherWeight > 0) {
-      // Proportionally adjust other images
-      otherImages.forEach(img => {
-        img.weight = (img.targetWeight / totalOtherWeight) * remainingWeight;
-      });
-    } else {
-      // Evenly distribute among other images
-      const evenWeight = remainingWeight / otherImages.length;
-      otherImages.forEach(img => {
-        img.weight = evenWeight;
-      });
+      // Calculate remaining weight to distribute
+      const remainingWeight = 1 - changedImage.targetWeight;
+
+      if (remainingWeight <= 0) {
+        // If changed image has weight 1, set all others to 0
+        otherImages.forEach(img => {
+          img._weight = 0;
+          img._targetWeight = 0;
+          if (img.morpherImage) {
+            img.morpherImage.setWeight(0);
+          }
+        });
+      } else if (totalOtherWeight > 0) {
+        // Proportionally adjust other images based on their current weights
+        otherImages.forEach(img => {
+          const newWeight = (img.targetWeight / totalOtherWeight) * remainingWeight;
+          img._weight = newWeight;
+          img._targetWeight = newWeight;
+          if (img.morpherImage) {
+            img.morpherImage.setWeight(newWeight);
+          }
+        });
+      } else {
+        // If all other images are at 0, distribute evenly
+        const evenWeight = remainingWeight / otherImages.length;
+        otherImages.forEach(img => {
+          img._weight = evenWeight;
+          img._targetWeight = evenWeight;
+          if (img.morpherImage) {
+            img.morpherImage.setWeight(evenWeight);
+          }
+        });
+      }
+
+      // Notify that weights have been normalized
+      this.dispatchEvent(new CustomEvent('weights:normalized', {
+        detail: { images: this.images, project: this }
+      }));
+
+      this.save();
+    } finally {
+      this._isNormalizingWeights = false;
     }
-
-    this.save();
   }
 
   /**
