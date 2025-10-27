@@ -321,6 +321,201 @@ class GuiProject extends BaseComponent {
   }
 
   /**
+   * Utility: Find an image by its ID
+   * @param {string} imageId - The image ID to search for
+   * @returns {Object|undefined} The image object or undefined if not found
+   */
+  findImageById(imageId) {
+    if (!this.project) {
+      return undefined;
+    }
+    return this.project.images.find(img => img.id === imageId);
+  }
+
+  /**
+   * Utility: Update slider background gradient based on percentage
+   * @param {HTMLElement} slider - The slider element
+   * @param {number} percentage - The percentage value (0-100)
+   */
+  updateSliderBackground(slider, percentage) {
+    slider.style.background = `linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${percentage}%, var(--color-border, #ddd) ${percentage}%, var(--color-border, #ddd) 100%)`;
+  }
+
+  /**
+   * Utility: Get canvas coordinates and drawing area information
+   * @param {HTMLCanvasElement} canvas - The canvas element
+   * @param {MouseEvent} event - The mouse event
+   * @returns {Object} Object containing { x, y, offsetX, offsetY, drawWidth, drawHeight, rect }
+   */
+  getCanvasCoordinates(canvas, event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const offsetX = parseFloat(canvas.dataset.offsetX) || 0;
+    const offsetY = parseFloat(canvas.dataset.offsetY) || 0;
+    const drawWidth = parseFloat(canvas.dataset.drawWidth) || rect.width;
+    const drawHeight = parseFloat(canvas.dataset.drawHeight) || rect.height;
+
+    return { x, y, offsetX, offsetY, drawWidth, drawHeight, rect };
+  }
+
+  /**
+   * Utility: Find nearest point to a given position
+   * @param {Array} points - Array of point objects with x, y, id properties
+   * @param {number} x - X coordinate to search from
+   * @param {number} y - Y coordinate to search from
+   * @param {number} offsetX - Canvas offset X
+   * @param {number} offsetY - Canvas offset Y
+   * @param {number} drawWidth - Canvas drawing width
+   * @param {number} drawHeight - Canvas drawing height
+   * @param {number} maxDistance - Maximum distance to consider (default: 10 pixels)
+   * @returns {Object|null} Object with { pointId, distance } or null if none found
+   */
+  findNearestPoint(points, x, y, offsetX, offsetY, drawWidth, drawHeight, maxDistance = 10) {
+    let nearestPointId = null;
+    let nearestDistance = Infinity;
+
+    points.forEach((point) => {
+      const pointX = offsetX + point.x * drawWidth;
+      const pointY = offsetY + point.y * drawHeight;
+      const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
+
+      if (distance < maxDistance && distance < nearestDistance) {
+        nearestPointId = point.id;
+        nearestDistance = distance;
+      }
+    });
+
+    return nearestPointId !== null ? { pointId: nearestPointId, distance: nearestDistance } : null;
+  }
+
+  /**
+   * Generate zoom controls HTML
+   * @returns {string} Zoom controls template
+   */
+  getZoomControlsTemplate() {
+    return `
+      <div class="zoom-controls">
+        <span class="zoom-label">Image Zoom:</span>
+        <input
+          type="range"
+          class="zoom-slider"
+          min="0.5"
+          max="10"
+          step="0.1"
+          value="${this.zoomLevel}"
+        />
+        <span class="zoom-value">${this.zoomLevel.toFixed(1)}x</span>
+        <div class="zoom-buttons">
+          <button class="zoom-button zoom-out">-</button>
+          <button class="zoom-button zoom-reset">Reset</button>
+          <button class="zoom-button zoom-in">+</button>
+        </div>
+        <button class="view-mode-toggle ${this.viewMode === 'portrait' ? 'active' : ''}">
+          ${this.viewMode === 'portrait' ? '📊 Horizontal View' : '📱 Portrait View'}
+        </button>
+      </div>
+    `;
+  }
+
+  /**
+   * Generate image tile HTML
+   * @param {Object} image - Image object
+   * @returns {string} Image tile template
+   */
+  getImageTileTemplate(image) {
+    return `
+      <div class="image-tile" data-image-id="${image.id}">
+        <div class="canvas-container">
+          <canvas
+            class="image-canvas"
+            data-image-id="${image.id}"
+          ></canvas>
+          ${!image.file ? `
+            <div class="canvas-placeholder">Loading...</div>
+          ` : ''}
+        </div>
+        <div class="image-info">
+          <label class="url-label">
+            Image URL:
+            <input
+              type="text"
+              class="url-input"
+              placeholder="Enter image URL..."
+              value="${this.escapeHTML(image.url || '')}"
+              data-image-id="${image.id}"
+            />
+          </label>
+        </div>
+        <div class="weight-control">
+          <label class="weight-label">
+            Weight: <span class="weight-value">${image.targetWeight.toFixed(2)}</span>
+          </label>
+          <input
+            type="range"
+            class="weight-slider"
+            min="0"
+            max="1"
+            step="0.01"
+            value="${image.targetWeight}"
+            data-image-id="${image.id}"
+            style="background: linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${image.targetWeight * 100}%, var(--color-border, #ddd) ${image.targetWeight * 100}%, var(--color-border, #ddd) 100%);"
+          />
+        </div>
+        <div class="image-actions">
+          <button class="btn btn-secondary btn-move" data-image-id="${image.id}">Move</button>
+          <button class="btn btn-danger btn-delete" data-image-id="${image.id}">Delete</button>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Generate add image tile HTML
+   * @returns {string} Add image tile template
+   */
+  getAddImageTileTemplate() {
+    return `
+      <div class="add-tile add-image-btn">
+        <div class="add-tile-content">
+          <div class="add-icon">+</div>
+          <div class="add-text">Add Image</div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Generate empty state HTML
+   * @returns {string} Empty state template
+   */
+  getEmptyStateTemplate() {
+    return `
+      <div class="empty-state">
+        <p>No images yet. Click below to add your first image.</p>
+        <div class="tiles-container">
+          ${this.getAddImageTileTemplate()}
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Generate preview section HTML
+   * @returns {string} Preview section template
+   */
+  getPreviewSectionTemplate() {
+    return `
+      <div class="preview-section">
+        <h3 class="preview-title">Morph Preview</h3>
+        <div class="preview-canvas-container">
+          <canvas id="preview-canvas" class="preview-canvas"></canvas>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Get component styles
    * @returns {string} CSS styles for the component
    */
@@ -811,101 +1006,14 @@ class GuiProject extends BaseComponent {
 
       <div class="project" style="--zoom-level: ${this.zoomLevel}">
         ${hasImages ? `
-          <div class="zoom-controls">
-            <span class="zoom-label">Image Zoom:</span>
-            <input
-              type="range"
-              class="zoom-slider"
-              min="0.5"
-              max="10"
-              step="0.1"
-              value="${this.zoomLevel}"
-            />
-            <span class="zoom-value">${this.zoomLevel.toFixed(1)}x</span>
-            <div class="zoom-buttons">
-              <button class="zoom-button zoom-out">-</button>
-              <button class="zoom-button zoom-reset">Reset</button>
-              <button class="zoom-button zoom-in">+</button>
-            </div>
-            <button class="view-mode-toggle ${this.viewMode === 'portrait' ? 'active' : ''}">
-              ${this.viewMode === 'portrait' ? '📊 Horizontal View' : '📱 Portrait View'}
-            </button>
-          </div>
+          ${this.getZoomControlsTemplate()}
           <div class="tiles-container ${this.viewMode === 'portrait' ? 'portrait-mode' : ''}">
-            ${images.map((image, index) => `
-              <div class="image-tile" data-image-id="${image.id}">
-                <div class="canvas-container">
-                  <canvas
-                    class="image-canvas"
-                    data-image-id="${image.id}"
-                  ></canvas>
-                  ${!image.file ? `
-                    <div class="canvas-placeholder">Loading...</div>
-                  ` : ''}
-                </div>
-                <div class="image-info">
-                  <label class="url-label">
-                    Image URL:
-                    <input
-                      type="text"
-                      class="url-input"
-                      placeholder="Enter image URL..."
-                      value="${this.escapeHTML(image.url || '')}"
-                      data-image-id="${image.id}"
-                    />
-                  </label>
-                </div>
-                <div class="weight-control">
-                  <label class="weight-label">
-                    Weight: <span class="weight-value">${image.targetWeight.toFixed(2)}</span>
-                  </label>
-                  <input
-                    type="range"
-                    class="weight-slider"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value="${image.targetWeight}"
-                    data-image-id="${image.id}"
-                    style="background: linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${image.targetWeight * 100}%, var(--color-border, #ddd) ${image.targetWeight * 100}%, var(--color-border, #ddd) 100%);"
-                  />
-                </div>
-                <div class="image-actions">
-                  <button class="btn btn-secondary btn-move" data-image-id="${image.id}">Move</button>
-                  <button class="btn btn-danger btn-delete" data-image-id="${image.id}">Delete</button>
-                </div>
-              </div>
-            `).join('')}
+            ${images.map(image => this.getImageTileTemplate(image)).join('')}
+            ${this.getAddImageTileTemplate()}
+          </div>
+        ` : this.getEmptyStateTemplate()}
 
-            <div class="add-tile add-image-btn">
-              <div class="add-tile-content">
-                <div class="add-icon">+</div>
-                <div class="add-text">Add Image</div>
-              </div>
-            </div>
-          </div>
-        ` : `
-          <div class="empty-state">
-            <p>No images yet. Click below to add your first image.</p>
-            <div class="tiles-container">
-              <div class="add-tile add-image-btn">
-                <div class="add-tile-content">
-                  <div class="add-icon">+</div>
-                  <div class="add-text">Add Image</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `}
-
-        ${hasImages && images.length >= 2 ? `
-          <div class="preview-section">
-            <h3 class="preview-title">Morph Preview</h3>
-            <div class="preview-canvas-container">
-              <canvas id="preview-canvas" class="preview-canvas"></canvas>
-            </div>
-          </div>
-        ` : ''}
+        ${hasImages && images.length >= 2 ? this.getPreviewSectionTemplate() : ''}
 
         <input
           type="file"
@@ -1105,7 +1213,16 @@ class GuiProject extends BaseComponent {
   }
 
   addImageEventListeners() {
-    // Weight sliders
+    this.addWeightSliderListeners();
+    this.addUrlInputListeners();
+    this.addCanvasInteractionListeners();
+    this.addDeleteButtonListeners();
+  }
+
+  /**
+   * Add event listeners for weight sliders
+   */
+  addWeightSliderListeners() {
     const sliders = this.queryAll('.weight-slider');
     sliders.forEach(slider => {
       const handleWeightInput = (e) => {
@@ -1113,16 +1230,18 @@ class GuiProject extends BaseComponent {
         const imageId = e.target.dataset.imageId;
         const value = parseFloat(e.target.value);
         const percentage = value * 100;
-        const image = this.project.images.find(img => img.id === imageId);
+        const image = this.findImageById(imageId);
 
-        if (!image) return;
+        if (!image) {
+          return;
+        }
 
         // Update the changed image's targetWeight
         // This will trigger handleWeightChange in Project model
         image.targetWeight = value;
 
         // Update current slider background gradient
-        e.target.style.background = `linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${percentage}%, var(--color-border, #ddd) ${percentage}%, var(--color-border, #ddd) 100%)`;
+        this.updateSliderBackground(e.target, percentage);
 
         // Update current slider display
         const tile = this.query(`[data-image-id="${imageId}"]`);
@@ -1145,7 +1264,7 @@ class GuiProject extends BaseComponent {
 
               // Update slider background
               const otherPercentage = img.weight * 100;
-              otherSlider.style.background = `linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${otherPercentage}%, var(--color-border, #ddd) ${otherPercentage}%, var(--color-border, #ddd) 100%)`;
+              this.updateSliderBackground(otherSlider, otherPercentage);
             }
 
             if (otherTile) {
@@ -1174,16 +1293,22 @@ class GuiProject extends BaseComponent {
       this.addTrackedListener(slider, 'input', handleWeightInput);
       this.addTrackedListener(slider, 'change', handleWeightChange);
     });
+  }
 
-    // URL inputs
+  /**
+   * Add event listeners for URL inputs
+   */
+  addUrlInputListeners() {
     const urlInputs = this.queryAll('.url-input');
     urlInputs.forEach(input => {
       this.addTrackedListener(input, 'change', async (e) => {
         const imageId = e.target.dataset.imageId;
         const url = e.target.value.trim();
-        const image = this.project.images.find(img => img.id === imageId);
+        const image = this.findImageById(imageId);
 
-        if (!image) return;
+        if (!image) {
+          return;
+        }
 
         if (url) {
           // Set URL and try to load the image
@@ -1199,11 +1324,15 @@ class GuiProject extends BaseComponent {
         }
       });
     });
+  }
 
+  /**
+   * Add event listeners for canvas interactions (point adding, dragging, deletion)
+   */
+  addCanvasInteractionListeners() {
     // Track hovered point ID across all canvases
     this.hoveredPointId = null;
 
-    // Canvas interaction handling (add/drag mesh points)
     const canvases = this.queryAll('.image-canvas');
     canvases.forEach((canvas, canvasIndex) => {
       let draggedPointIndex = null;
@@ -1217,92 +1346,57 @@ class GuiProject extends BaseComponent {
           return;
         }
 
-        if (!this.project) {
-          return;
-        }
-
-        const image = this.project.images.find(img => img.id === imageId);
+        const image = this.findImageById(imageId);
         if (!image) {
           return;
         }
 
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const coords = this.getCanvasCoordinates(canvas, e);
+        const nearest = this.findNearestPoint(
+          image.points,
+          coords.x,
+          coords.y,
+          coords.offsetX,
+          coords.offsetY,
+          coords.drawWidth,
+          coords.drawHeight
+        );
 
-        // Get the actual image drawing area (accounting for aspect ratio)
-        const offsetX = parseFloat(canvas.dataset.offsetX) || 0;
-        const offsetY = parseFloat(canvas.dataset.offsetY) || 0;
-        const drawWidth = parseFloat(canvas.dataset.drawWidth) || rect.width;
-        const drawHeight = parseFloat(canvas.dataset.drawHeight) || rect.height;
-
-        // Check if clicking near an existing point
-        const clickRadius = 10; // pixels
-
-        let nearestPointId = null;
-        let nearestDistance = Infinity;
-
-        image.points.forEach((point) => {
-          const pointX = offsetX + point.x * drawWidth;
-          const pointY = offsetY + point.y * drawHeight;
-          const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
-
-          if (distance < clickRadius && distance < nearestDistance) {
-            nearestPointId = point.id;
-            nearestDistance = distance;
-          }
-        });
-
-        if (nearestPointId !== null) {
+        if (nearest) {
           // Start dragging existing point
-          draggedPointIndex = nearestPointId;
+          draggedPointIndex = nearest.pointId;
           isDragging = true;
           canvas.style.cursor = 'grabbing';
         }
       });
 
       this.addTrackedListener(canvas, 'mousemove', (e) => {
-        if (!this.project) {
-          return;
-        }
-
-        const image = this.project.images.find(img => img.id === imageId);
+        const image = this.findImageById(imageId);
         if (!image) {
           return;
         }
 
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        // Get the actual image drawing area (accounting for aspect ratio)
-        const offsetX = parseFloat(canvas.dataset.offsetX) || 0;
-        const offsetY = parseFloat(canvas.dataset.offsetY) || 0;
-        const drawWidth = parseFloat(canvas.dataset.drawWidth) || rect.width;
-        const drawHeight = parseFloat(canvas.dataset.drawHeight) || rect.height;
+        const coords = this.getCanvasCoordinates(canvas, e);
 
         if (isDragging && draggedPointIndex !== null) {
           // Update point position while dragging on this specific image
           // Convert mouse position to normalized coordinates (0-1) relative to image area
-          const normalizedX = Math.max(0, Math.min(1, (x - offsetX) / drawWidth));
-          const normalizedY = Math.max(0, Math.min(1, (y - offsetY) / drawHeight));
+          const normalizedX = Math.max(0, Math.min(1, (coords.x - coords.offsetX) / coords.drawWidth));
+          const normalizedY = Math.max(0, Math.min(1, (coords.y - coords.offsetY) / coords.drawHeight));
           image.updatePoint(draggedPointIndex, normalizedX, normalizedY);
         } else {
           // Update cursor and hover highlighting when over points
-          const clickRadius = 10;
-          let overPoint = false;
-          let hoveredId = null;
+          const nearest = this.findNearestPoint(
+            image.points,
+            coords.x,
+            coords.y,
+            coords.offsetX,
+            coords.offsetY,
+            coords.drawWidth,
+            coords.drawHeight
+          );
 
-          image.points.forEach((point) => {
-            const pointX = offsetX + point.x * drawWidth;
-            const pointY = offsetY + point.y * drawHeight;
-            const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
-
-            if (distance < clickRadius) {
-              overPoint = true;
-              hoveredId = point.id;
-            }
-          });
+          const hoveredId = nearest ? nearest.pointId : null;
 
           // Update global hovered point ID if changed
           if (this.hoveredPointId !== hoveredId) {
@@ -1312,7 +1406,7 @@ class GuiProject extends BaseComponent {
 
           // First image: crosshair for adding points, grab for dragging
           // Other images: default cursor (no adding), grab for dragging
-          if (overPoint) {
+          if (nearest) {
             canvas.style.cursor = 'grab';
           } else {
             canvas.style.cursor = isFirstImage ? 'crosshair' : 'default';
@@ -1326,25 +1420,6 @@ class GuiProject extends BaseComponent {
           return;
         }
 
-        if (!this.project) {
-          return;
-        }
-
-        const image = this.project.images.find(img => img.id === imageId);
-        if (!image) {
-          return;
-        }
-
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        // Get the actual image drawing area (accounting for aspect ratio)
-        const offsetX = parseFloat(canvas.dataset.offsetX) || 0;
-        const offsetY = parseFloat(canvas.dataset.offsetY) || 0;
-        const drawWidth = parseFloat(canvas.dataset.drawWidth) || rect.width;
-        const drawHeight = parseFloat(canvas.dataset.drawHeight) || rect.height;
-
         if (isDragging) {
           // Finished dragging
           isDragging = false;
@@ -1353,8 +1428,9 @@ class GuiProject extends BaseComponent {
         } else if (isFirstImage) {
           // Click without drag - add new point to ALL images at same position
           // (only allowed on first image)
-          const normalizedX = (x - offsetX) / drawWidth;
-          const normalizedY = (y - offsetY) / drawHeight;
+          const coords = this.getCanvasCoordinates(canvas, e);
+          const normalizedX = (coords.x - coords.offsetX) / coords.drawWidth;
+          const normalizedY = (coords.y - coords.offsetY) / coords.drawHeight;
 
           // Add to all images to keep them in sync
           // Use the first image to generate the ID, then use same ID for all images
@@ -1388,46 +1464,26 @@ class GuiProject extends BaseComponent {
           return;
         }
 
-        if (!this.project) {
-          return;
-        }
-
-        const image = this.project.images.find(img => img.id === imageId);
+        const image = this.findImageById(imageId);
         if (!image) {
           return;
         }
 
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const coords = this.getCanvasCoordinates(canvas, e);
+        const nearest = this.findNearestPoint(
+          image.points,
+          coords.x,
+          coords.y,
+          coords.offsetX,
+          coords.offsetY,
+          coords.drawWidth,
+          coords.drawHeight
+        );
 
-        // Get the actual image drawing area (accounting for aspect ratio)
-        const offsetX = parseFloat(canvas.dataset.offsetX) || 0;
-        const offsetY = parseFloat(canvas.dataset.offsetY) || 0;
-        const drawWidth = parseFloat(canvas.dataset.drawWidth) || rect.width;
-        const drawHeight = parseFloat(canvas.dataset.drawHeight) || rect.height;
-
-        // Check if right-clicking near an existing point
-        const clickRadius = 10; // pixels
-
-        let nearestPointId = null;
-        let nearestDistance = Infinity;
-
-        image.points.forEach((point) => {
-          const pointX = offsetX + point.x * drawWidth;
-          const pointY = offsetY + point.y * drawHeight;
-          const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
-
-          if (distance < clickRadius && distance < nearestDistance) {
-            nearestPointId = point.id;
-            nearestDistance = distance;
-          }
-        });
-
-        if (nearestPointId !== null) {
+        if (nearest) {
           // Delete point from ALL images using the point ID
           this.project.images.forEach((img) => {
-            const pointIndex = img.points.findIndex(p => p.id === nearestPointId);
+            const pointIndex = img.points.findIndex(p => p.id === nearest.pointId);
             if (pointIndex !== -1) {
               img.points.splice(pointIndex, 1);
             }
@@ -1442,13 +1498,17 @@ class GuiProject extends BaseComponent {
         }
       });
     });
+  }
 
-    // Delete buttons
+  /**
+   * Add event listeners for delete buttons
+   */
+  addDeleteButtonListeners() {
     const deleteButtons = this.queryAll('.btn-delete');
     deleteButtons.forEach(btn => {
       this.addTrackedListener(btn, 'click', (e) => {
         const imageId = e.target.dataset.imageId;
-        const image = this.project.images.find(img => img.id === imageId);
+        const image = this.findImageById(imageId);
 
         if (image && confirm(`Delete image "${image.url}"?`)) {
           this.project.removeImage(image);
