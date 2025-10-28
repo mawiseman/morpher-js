@@ -459,7 +459,10 @@ class GuiProject extends BaseComponent {
               style="background: linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${image.targetWeight * 100}%, var(--color-border, #ddd) ${image.targetWeight * 100}%, var(--color-border, #ddd) 100%);"
             />
           </div>
-          <button class="btn-delete" data-image-id="${image.id}">Delete Image</button>
+          <div class="button-row">
+            <button class="btn-json" data-image-id="${image.id}">View / Edit JSON</button>
+            <button class="btn-delete" data-image-id="${image.id}">Delete Image</button>
+          </div>
         </div>
       </div>
     `;
@@ -650,9 +653,33 @@ class GuiProject extends BaseComponent {
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
+        /* Button row container */
+        .button-row {
+          display: flex;
+          gap: 8px;
+          width: 100%;
+        }
+
+        /* JSON button */
+        .btn-json {
+          flex: 1;
+          padding: 8px 12px;
+          background: var(--color-primary, #007bff);
+          color: white;
+          border: none;
+          border-radius: 4px;
+          font-size: var(--font-size-sm, 14px);
+          cursor: pointer;
+          transition: background var(--transition-fast, 150ms ease);
+        }
+
+        .btn-json:hover {
+          background: var(--color-primary-hover, #0056b3);
+        }
+
         /* Delete button */
         .btn-delete {
-          width: 100%;
+          flex: 1;
           padding: 8px 12px;
           background: var(--color-danger, #dc3545);
           color: white;
@@ -665,6 +692,124 @@ class GuiProject extends BaseComponent {
 
         .btn-delete:hover {
           background: var(--color-danger-hover, #c82333);
+        }
+
+        /* JSON Modal */
+        .json-modal {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 1000;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .json-modal.active {
+          display: flex;
+        }
+
+        .json-modal-content {
+          background: var(--color-surface, #fff);
+          border-radius: 8px;
+          padding: var(--spacing-lg, 24px);
+          max-width: 1200px;
+          width: 90%;
+          height: 75vh;
+          max-height: 90vh;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .json-modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: var(--spacing-md, 16px);
+        }
+
+        .json-modal-title {
+          font-size: var(--font-size-lg, 18px);
+          font-weight: 600;
+          color: var(--color-text, #333);
+        }
+
+        .json-modal-close {
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: var(--color-text-secondary, #666);
+          padding: 0;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .json-modal-close:hover {
+          color: var(--color-text, #333);
+        }
+
+        .json-textarea {
+          flex: 1;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+          font-size: 12px;
+          padding: var(--spacing-sm, 8px);
+          border: 1px solid var(--color-border, #ddd);
+          border-radius: 4px;
+          resize: none;
+          margin-bottom: var(--spacing-md, 16px);
+        }
+
+        .json-modal-actions {
+          display: flex;
+          gap: var(--spacing-sm, 8px);
+          justify-content: flex-end;
+        }
+
+        .json-btn-copy,
+        .json-btn-update,
+        .json-btn-cancel {
+          padding: 8px 16px;
+          border: none;
+          border-radius: 4px;
+          font-size: var(--font-size-sm, 14px);
+          cursor: pointer;
+          transition: background var(--transition-fast, 150ms ease);
+        }
+
+        .json-btn-copy {
+          background: var(--color-secondary, #6c757d);
+          color: white;
+        }
+
+        .json-btn-copy:hover {
+          background: #5a6268;
+        }
+
+        .json-btn-update {
+          background: var(--color-success, #28a745);
+          color: white;
+        }
+
+        .json-btn-update:hover {
+          background: #218838;
+        }
+
+        .json-btn-cancel {
+          background: var(--color-surface, #fff);
+          color: var(--color-text, #333);
+          border: 1px solid var(--color-border, #ddd);
+        }
+
+        .json-btn-cancel:hover {
+          background: var(--color-surface-hover, #f8f9fa);
         }
 
         .zoom-label {
@@ -823,6 +968,22 @@ class GuiProject extends BaseComponent {
         </div>
 
         <input type="file" id="file-input" class="file-input" accept="image/*" multiple />
+
+        <!-- JSON Modal -->
+        <div class="json-modal">
+          <div class="json-modal-content">
+            <div class="json-modal-header">
+              <h3 class="json-modal-title">Image JSON Data</h3>
+              <button class="json-modal-close">&times;</button>
+            </div>
+            <textarea class="json-textarea" spellcheck="false"></textarea>
+            <div class="json-modal-actions">
+              <button class="json-btn-copy">Copy to Clipboard</button>
+              <button class="json-btn-update">Update JSON</button>
+              <button class="json-btn-cancel">Cancel</button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
 
@@ -1012,6 +1173,7 @@ class GuiProject extends BaseComponent {
   addImageEventListeners() {
     this.addWeightSliderListeners();
     this.addCanvasInteractionListeners();
+    this.addJsonButtonListeners();
     this.addDeleteButtonListeners();
   }
 
@@ -1278,6 +1440,122 @@ class GuiProject extends BaseComponent {
         });
       }
     });
+  }
+
+  /**
+   * Add event listeners for JSON buttons
+   */
+  addJsonButtonListeners() {
+    const jsonButtons = this.queryAll('.btn-json');
+    jsonButtons.forEach(btn => {
+      this.addTrackedListener(btn, 'click', (e) => {
+        const imageId = e.target.dataset.imageId;
+        const image = this.findImageById(imageId);
+        if (image) {
+          this.showJsonModal(image);
+        }
+      });
+    });
+  }
+
+  /**
+   * Show the JSON modal for an image
+   */
+  showJsonModal(image) {
+    const modal = this.query('.json-modal');
+    const textarea = this.query('.json-textarea');
+    const copyBtn = this.query('.json-btn-copy');
+    const updateBtn = this.query('.json-btn-update');
+    const cancelBtn = this.query('.json-btn-cancel');
+    const closeBtn = this.query('.json-modal-close');
+
+    // Get JSON data for the image (points and metadata)
+    const imageData = {
+      points: image.points,
+      url: image.url,
+      targetWeight: image.targetWeight
+    };
+
+    // Display formatted JSON
+    textarea.value = JSON.stringify(imageData, null, 2);
+
+    // Store current image reference
+    modal.dataset.currentImageId = image.id;
+
+    // Show modal
+    modal.classList.add('active');
+
+    // Copy button
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(textarea.value);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy to Clipboard';
+        }, 2000);
+      } catch (err) {
+        // Fallback for older browsers
+        textarea.select();
+        document.execCommand('copy');
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy to Clipboard';
+        }, 2000);
+      }
+    };
+
+    // Update button
+    const handleUpdate = () => {
+      try {
+        const updatedData = JSON.parse(textarea.value);
+
+        // Validate that points exist and are valid
+        if (!Array.isArray(updatedData.points)) {
+          alert('Invalid JSON: points must be an array');
+          return;
+        }
+
+        // Update image points
+        image.setPoints(updatedData.points);
+
+        // Update other properties if present
+        if (updatedData.targetWeight !== undefined) {
+          image.targetWeight = updatedData.targetWeight;
+        }
+
+        // Trigger triangulation and morpher update
+        this.project.autoTriangulate();
+        this.project.save();
+
+        // Redraw everything
+        this.drawCanvases();
+        this.reinitMorpherPreview();
+
+        // Close modal
+        modal.classList.remove('active');
+      } catch (e) {
+        alert('Invalid JSON: ' + e.message);
+      }
+    };
+
+    // Cancel/Close handlers
+    const handleClose = () => {
+      modal.classList.remove('active');
+    };
+
+    // Add one-time event listeners
+    copyBtn.addEventListener('click', handleCopy, { once: true });
+    updateBtn.addEventListener('click', handleUpdate, { once: true });
+    cancelBtn.addEventListener('click', handleClose, { once: true });
+    closeBtn.addEventListener('click', handleClose, { once: true });
+
+    // Close on background click
+    const handleBackgroundClick = (e) => {
+      if (e.target === modal) {
+        handleClose();
+      }
+    };
+    modal.addEventListener('click', handleBackgroundClick, { once: true });
   }
 
   /**
