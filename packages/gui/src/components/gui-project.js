@@ -16,12 +16,26 @@ import { projectStore } from '../models/ProjectStore.js';
 import { Morpher } from 'morpher-js';
 
 class GuiProject extends BaseComponent {
+  // Static stylesheet shared across all instances (Constructable Stylesheet API)
+  static styleSheet = new CSSStyleSheet();
+  static stylesInitialized = false;
+
   static get observedAttributes() {
     return ['project-id'];
   }
 
   constructor() {
     super();
+
+    // Initialize styles once for all instances (performance optimization)
+    if (!GuiProject.stylesInitialized) {
+      GuiProject.initializeStyles();
+      GuiProject.stylesInitialized = true;
+    }
+
+    // Adopt the stylesheet into this instance's Shadow DOM
+    this.shadowRoot.adoptedStyleSheets = [GuiProject.styleSheet];
+
     this.project = null;
     this.morpher = null;
 
@@ -485,12 +499,11 @@ class GuiProject extends BaseComponent {
   }
 
   /**
-   * Get component styles
-   * @returns {string} CSS styles for the component
+   * Initialize component styles (called once for all instances)
+   * Uses Constructable Stylesheets API for optimal performance
    */
-  getStyles() {
-    return `
-      <style>
+  static initializeStyles() {
+    GuiProject.styleSheet.replaceSync(`
         :host {
           display: block;
           width: 100%;
@@ -916,8 +929,7 @@ class GuiProject extends BaseComponent {
           font-weight: 600;
           color: var(--color-primary, #007bff);
         }
-      </style>
-    `;
+    `);
   }
 
   async handleFileSelect(event) {
@@ -985,9 +997,8 @@ class GuiProject extends BaseComponent {
 
     const images = this.project.images;
 
+    // Styles are already adopted in constructor - no need to include them here!
     this.shadowRoot.innerHTML = `
-      ${this.getStyles()}
-
       <div class="project">
         ${this.getZoomControlsTemplate()}
 
