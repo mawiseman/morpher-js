@@ -18,7 +18,7 @@
  * - morpher:change - Fired when morpher data changes
  */
 
-import { generateId } from '../utils/id-generator.js';
+import { generateTimestampId } from '../utils/id-generator.js';
 import { randomPastelColor } from '../utils/colors.js';
 import { Image } from './Image.js';
 import { createNamespace } from '../utils/storage.js';
@@ -40,7 +40,7 @@ export class Project extends EventTarget {
   constructor(attrs = {}) {
     super();
 
-    this.id = attrs.id || generateId('project');
+    this.id = attrs.id || generateTimestampId('project');
     this._name = attrs.name || 'New Project';
     this._color = attrs.color || randomPastelColor();
     this.blendFunction = attrs.blend_function || null;
@@ -426,6 +426,7 @@ export class Project extends EventTarget {
       const storage = createNamespace(STORAGE_NAMESPACE);
       const json = this.toJSON({ includeImageData: true });
       storage.setItem(`project_${this.id}`, json);
+      console.log(`[Project] Saved project ${this.id} (${this.name}) with ${this.images.length} images`);
       return true;
     } catch (e) {
       console.error('Failed to save project:', e);
@@ -436,6 +437,7 @@ export class Project extends EventTarget {
           const storage = createNamespace(STORAGE_NAMESPACE);
           const json = this.toJSON({ includeImageData: false });
           storage.setItem(`project_${this.id}`, json);
+          console.log(`[Project] Saved project ${this.id} (${this.name}) WITHOUT image data`);
           return true;
         } catch (e2) {
           console.error('Failed to save even without image data:', e2);

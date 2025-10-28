@@ -24,6 +24,7 @@ class GuiMenuBar extends BaseComponent {
     super();
     this.currentProject = null;
     this.isEditing = false;
+    this.editingProject = null; // Track which project is being edited
   }
 
   connectedCallback() {
@@ -148,6 +149,7 @@ class GuiMenuBar extends BaseComponent {
 
   startEditing() {
     this.isEditing = true;
+    this.editingProject = this.currentProject; // Capture which project we're editing
     const projectName = this.query('.project-name');
     if (projectName) {
       projectName.contentEditable = 'true';
@@ -165,17 +167,24 @@ class GuiMenuBar extends BaseComponent {
   stopEditing() {
     this.isEditing = false;
     const projectName = this.query('.project-name');
-    if (projectName && this.currentProject) {
+
+    // Only save if we have a valid editing session
+    if (projectName && this.editingProject) {
       projectName.contentEditable = 'false';
       const newName = projectName.textContent.trim();
 
-      if (newName && newName !== this.currentProject.name) {
-        this.currentProject.name = newName;
+      console.log(`[MenuBar] stopEditing: editingProject=${this.editingProject.id}, oldName="${this.editingProject.name}", newName="${newName}"`);
+
+      if (newName && newName !== this.editingProject.name) {
+        console.log(`[MenuBar] Renaming project ${this.editingProject.id} from "${this.editingProject.name}" to "${newName}"`);
+        this.editingProject.name = newName;
         this.emit('project-rename', { name: newName });
       } else {
         // Restore original name if empty or unchanged
-        projectName.textContent = this.currentProject.name;
+        projectName.textContent = this.editingProject.name;
       }
+
+      this.editingProject = null; // Clear editing state
     }
   }
 

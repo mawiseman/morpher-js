@@ -28,10 +28,6 @@ class GuiProject extends BaseComponent {
     // Load zoom level from localStorage, default to 1.0
     const savedZoom = localStorage.getItem('morpher-zoom-level');
     this.zoomLevel = savedZoom ? parseFloat(savedZoom) : 1.0;
-
-    // Load view mode from localStorage, default to 'horizontal'
-    const savedViewMode = localStorage.getItem('morpher-view-mode');
-    this.viewMode = savedViewMode || 'horizontal';
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -69,6 +65,8 @@ class GuiProject extends BaseComponent {
       this.handleMeshChange = () => {
         this.drawCanvases();
         this.syncMorpherPointsAndTriangles();
+        // Force morpher reinit to apply new triangulation
+        this.reinitMorpherPreview();
       };
       this.handleWeightsNormalized = () => this.updateWeightSliders();
 
@@ -147,14 +145,14 @@ class GuiProject extends BaseComponent {
     const zoomInBtn = this.query('.zoom-in');
     if (zoomInBtn) {
       this.addTrackedListener(zoomInBtn, 'click', () => {
-        this.handleZoomChange(Math.min(10, this.zoomLevel + 0.5));
+        this.handleZoomChange(Math.min(10, this.zoomLevel + 0.25));
       });
     }
 
     const zoomOutBtn = this.query('.zoom-out');
     if (zoomOutBtn) {
       this.addTrackedListener(zoomOutBtn, 'click', () => {
-        this.handleZoomChange(Math.max(0.5, this.zoomLevel - 0.5));
+        this.handleZoomChange(Math.max(0.25, this.zoomLevel - 0.25));
       });
     }
 
@@ -165,36 +163,28 @@ class GuiProject extends BaseComponent {
       });
     }
 
-    // View mode toggle
-    const viewModeToggle = this.query('.view-mode-toggle');
-    if (viewModeToggle) {
-      this.addTrackedListener(viewModeToggle, 'click', () => {
-        this.toggleViewMode();
-      });
-    }
-
-    // Synchronized scrolling in portrait mode
+    // Synchronized scrolling
     this.setupSyncedScrolling();
 
     // Drag and drop
-    const tilesContainer = this.query('.tiles-container');
-    if (tilesContainer) {
-      this.addTrackedListener(tilesContainer, 'dragover', (e) => {
+    const sourceImagesRow = this.query('.source-images-row');
+    if (sourceImagesRow) {
+      this.addTrackedListener(sourceImagesRow, 'dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        tilesContainer.classList.add('drag-over');
+        sourceImagesRow.classList.add('drag-over');
       });
 
-      this.addTrackedListener(tilesContainer, 'dragleave', (e) => {
+      this.addTrackedListener(sourceImagesRow, 'dragleave', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        tilesContainer.classList.remove('drag-over');
+        sourceImagesRow.classList.remove('drag-over');
       });
 
-      this.addTrackedListener(tilesContainer, 'drop', (e) => {
+      this.addTrackedListener(sourceImagesRow, 'drop', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        tilesContainer.classList.remove('drag-over');
+        sourceImagesRow.classList.remove('drag-over');
         this.handleDrop(e);
       });
     }
@@ -209,9 +199,6 @@ class GuiProject extends BaseComponent {
   }
 
   setupSyncedScrolling() {
-    // Only sync scrolling in portrait mode
-    if (this.viewMode !== 'portrait') return;
-
     const canvasContainers = this.queryAll('.canvas-container');
     if (canvasContainers.length < 2) return;
 
@@ -243,21 +230,16 @@ class GuiProject extends BaseComponent {
   }
 
   handleZoomChange(newZoom) {
-    this.zoomLevel = newZoom;
-
-    // Save zoom level to localStorage
-    localStorage.setItem('morpher-zoom-level', this.zoomLevel.toString());
-
-    // Update the CSS variable
-    const projectContainer = this.query('.project');
-    if (projectContainer) {
-      projectContainer.style.setProperty('--zoom-level', this.zoomLevel);
+    if (newZoom !== undefined) {
+      this.zoomLevel = newZoom;
+      // Save zoom level to localStorage
+      localStorage.setItem('morpher-zoom-level', this.zoomLevel.toString());
     }
 
     // Update zoom value display
     const zoomValue = this.query('.zoom-value');
     if (zoomValue) {
-      zoomValue.textContent = `${this.zoomLevel.toFixed(1)}x`;
+      zoomValue.textContent = `${this.zoomLevel.toFixed(2)}x`;
     }
 
     // Update slider value
@@ -266,26 +248,40 @@ class GuiProject extends BaseComponent {
       zoomSlider.value = this.zoomLevel;
     }
 
-    // In portrait mode, manually scale canvas CSS dimensions
-    if (this.viewMode === 'portrait') {
-      const canvases = this.queryAll('.image-canvas');
-      canvases.forEach(canvas => {
-        // Get the natural dimensions from dataset (stored during image load)
-        const naturalWidth = parseFloat(canvas.dataset.naturalWidth) || canvas.width;
-        const naturalHeight = parseFloat(canvas.dataset.naturalHeight) || canvas.height;
+    // Scale canvas CSS dimensions based on zoom
+    const canvases = this.queryAll('.image-canvas');
+    canvases.forEach(canvas => {
+      const container = canvas.parentElement; // .canvas-container
+      if (!container) return;
 
-        // Set CSS dimensions to natural * zoom
-        canvas.style.width = `${naturalWidth * this.zoomLevel}px`;
-        canvas.style.height = `${naturalHeight * this.zoomLevel}px`;
-      });
-    } else {
-      // In horizontal mode, remove inline styles to use CSS
-      const canvases = this.queryAll('.image-canvas');
-      canvases.forEach(canvas => {
-        canvas.style.width = '';
-        canvas.style.height = '';
-      });
-    }
+      // Get the natural dimensions from dataset (stored during image load)
+      const naturalWidth = parseFloat(canvas.dataset.naturalWidth) || canvas.width;
+      const naturalHeight = parseFloat(canvas.dataset.naturalHeight) || canvas.height;
+
+      // Get container dimensions
+      const containerRect = container.getBoundingClientRect();
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+
+      // Calculate size to fit container while maintaining aspect ratio (this is 1x zoom)
+      const imgAspect = naturalWidth / naturalHeight;
+      const containerAspect = containerWidth / containerHeight;
+
+      let baseFitWidth, baseFitHeight;
+      if (imgAspect > containerAspect) {
+        // Image is wider - fit to width
+        baseFitWidth = containerWidth;
+        baseFitHeight = containerWidth / imgAspect;
+      } else {
+        // Image is taller - fit to height
+        baseFitHeight = containerHeight;
+        baseFitWidth = containerHeight * imgAspect;
+      }
+
+      // Apply zoom multiplier to the fitted size
+      canvas.style.width = `${baseFitWidth * this.zoomLevel}px`;
+      canvas.style.height = `${baseFitHeight * this.zoomLevel}px`;
+    });
 
     // Redraw canvases after CSS changes are applied
     requestAnimationFrame(() => {
@@ -293,32 +289,35 @@ class GuiProject extends BaseComponent {
     });
   }
 
-  toggleViewMode() {
-    // Toggle between horizontal and portrait mode
-    this.viewMode = this.viewMode === 'horizontal' ? 'portrait' : 'horizontal';
+  /**
+   * Save the scroll position for a specific canvas container
+   * @param {string} imageId - The ID of the image
+   * @param {HTMLElement} container - The canvas container element
+   */
+  saveCanvasScrollPosition(imageId, container) {
+    const scrollData = {
+      scrollLeft: container.scrollLeft,
+      scrollTop: container.scrollTop
+    };
+    localStorage.setItem(`morpher-canvas-scroll-${imageId}`, JSON.stringify(scrollData));
+  }
 
-    // Save view mode to localStorage
-    localStorage.setItem('morpher-view-mode', this.viewMode);
-
-    // Re-render to apply the new view mode
-    this.render();
-
-    // After render, apply zoom to canvases in portrait mode and setup synced scrolling
-    requestAnimationFrame(() => {
-      if (this.viewMode === 'portrait') {
-        const canvases = this.queryAll('.image-canvas');
-        canvases.forEach(canvas => {
-          // Get the natural dimensions from dataset (stored during image load)
-          const naturalWidth = parseFloat(canvas.dataset.naturalWidth) || canvas.width;
-          const naturalHeight = parseFloat(canvas.dataset.naturalHeight) || canvas.height;
-          canvas.style.width = `${naturalWidth * this.zoomLevel}px`;
-          canvas.style.height = `${naturalHeight * this.zoomLevel}px`;
-        });
-
-        // Setup synchronized scrolling for portrait mode
-        this.setupSyncedScrolling();
+  /**
+   * Restore the scroll position for a specific canvas container
+   * @param {string} imageId - The ID of the image
+   * @param {HTMLElement} container - The canvas container element
+   */
+  restoreCanvasScrollPosition(imageId, container) {
+    const savedData = localStorage.getItem(`morpher-canvas-scroll-${imageId}`);
+    if (savedData) {
+      try {
+        const scrollData = JSON.parse(savedData);
+        container.scrollLeft = scrollData.scrollLeft;
+        container.scrollTop = scrollData.scrollTop;
+      } catch (e) {
+        console.error(`Failed to parse scroll data for image ${imageId}:`, e);
       }
-    });
+    }
   }
 
   /**
@@ -350,12 +349,24 @@ class GuiProject extends BaseComponent {
    */
   getCanvasCoordinates(canvas, event) {
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+
+    // Mouse position in CSS pixels
+    const cssX = event.clientX - rect.left;
+    const cssY = event.clientY - rect.top;
+
+    // Calculate scale factor between canvas buffer and CSS dimensions
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    // Convert to canvas buffer coordinates
+    const x = cssX * scaleX;
+    const y = cssY * scaleY;
+
+    // Get stored drawing area (in canvas buffer coordinates)
     const offsetX = parseFloat(canvas.dataset.offsetX) || 0;
     const offsetY = parseFloat(canvas.dataset.offsetY) || 0;
-    const drawWidth = parseFloat(canvas.dataset.drawWidth) || rect.width;
-    const drawHeight = parseFloat(canvas.dataset.drawHeight) || rect.height;
+    const drawWidth = parseFloat(canvas.dataset.drawWidth) || canvas.width;
+    const drawHeight = parseFloat(canvas.dataset.drawHeight) || canvas.height;
 
     return { x, y, offsetX, offsetY, drawWidth, drawHeight, rect };
   }
@@ -397,24 +408,22 @@ class GuiProject extends BaseComponent {
   getZoomControlsTemplate() {
     return `
       <div class="zoom-controls">
-        <span class="zoom-label">Image Zoom:</span>
+        <button class="btn-add-images add-image-btn">+ Add Images</button>
+        <span class="zoom-label">Zoom:</span>
         <input
           type="range"
           class="zoom-slider"
-          min="0.5"
+          min="0.25"
           max="10"
-          step="0.1"
+          step="0.25"
           value="${this.zoomLevel}"
         />
-        <span class="zoom-value">${this.zoomLevel.toFixed(1)}x</span>
+        <span class="zoom-value">${this.zoomLevel.toFixed(2)}x</span>
         <div class="zoom-buttons">
           <button class="zoom-button zoom-out">-</button>
           <button class="zoom-button zoom-reset">Reset</button>
           <button class="zoom-button zoom-in">+</button>
         </div>
-        <button class="view-mode-toggle ${this.viewMode === 'portrait' ? 'active' : ''}">
-          ${this.viewMode === 'portrait' ? '📊 Horizontal View' : '📱 Portrait View'}
-        </button>
       </div>
     `;
   }
@@ -432,85 +441,25 @@ class GuiProject extends BaseComponent {
             class="image-canvas"
             data-image-id="${image.id}"
           ></canvas>
-          ${!image.file ? `
-            <div class="canvas-placeholder">Loading...</div>
-          ` : ''}
         </div>
-        <div class="image-info">
-          <label class="url-label">
-            Image URL:
+        <div class="image-controls">
+          <div class="weight-control">
+            <label class="weight-label">
+              <span>Weight:</span>
+              <span class="weight-value">${image.targetWeight.toFixed(2)}</span>
+            </label>
             <input
-              type="text"
-              class="url-input"
-              placeholder="Enter image URL..."
-              value="${this.escapeHTML(image.url || '')}"
+              type="range"
+              class="weight-slider"
+              min="0"
+              max="1"
+              step="0.01"
+              value="${image.targetWeight}"
               data-image-id="${image.id}"
+              style="background: linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${image.targetWeight * 100}%, var(--color-border, #ddd) ${image.targetWeight * 100}%, var(--color-border, #ddd) 100%);"
             />
-          </label>
-        </div>
-        <div class="weight-control">
-          <label class="weight-label">
-            Weight: <span class="weight-value">${image.targetWeight.toFixed(2)}</span>
-          </label>
-          <input
-            type="range"
-            class="weight-slider"
-            min="0"
-            max="1"
-            step="0.01"
-            value="${image.targetWeight}"
-            data-image-id="${image.id}"
-            style="background: linear-gradient(to right, var(--color-primary, #007bff) 0%, var(--color-primary, #007bff) ${image.targetWeight * 100}%, var(--color-border, #ddd) ${image.targetWeight * 100}%, var(--color-border, #ddd) 100%);"
-          />
-        </div>
-        <div class="image-actions">
-          <button class="btn btn-secondary btn-move" data-image-id="${image.id}">Move</button>
-          <button class="btn btn-danger btn-delete" data-image-id="${image.id}">Delete</button>
-        </div>
-      </div>
-    `;
-  }
-
-  /**
-   * Generate add image tile HTML
-   * @returns {string} Add image tile template
-   */
-  getAddImageTileTemplate() {
-    return `
-      <div class="add-tile add-image-btn">
-        <div class="add-tile-content">
-          <div class="add-icon">+</div>
-          <div class="add-text">Add Image</div>
-        </div>
-      </div>
-    `;
-  }
-
-  /**
-   * Generate empty state HTML
-   * @returns {string} Empty state template
-   */
-  getEmptyStateTemplate() {
-    return `
-      <div class="empty-state">
-        <p>No images yet. Click below to add your first image.</p>
-        <div class="tiles-container">
-          ${this.getAddImageTileTemplate()}
-        </div>
-      </div>
-    `;
-  }
-
-  /**
-   * Generate preview section HTML
-   * @returns {string} Preview section template
-   */
-  getPreviewSectionTemplate() {
-    return `
-      <div class="preview-section">
-        <h3 class="preview-title">Morph Preview</h3>
-        <div class="preview-canvas-container">
-          <canvas id="preview-canvas" class="preview-canvas"></canvas>
+          </div>
+          <button class="btn-delete" data-image-id="${image.id}">Delete Image</button>
         </div>
       </div>
     `;
@@ -531,144 +480,123 @@ class GuiProject extends BaseComponent {
         .project {
           display: flex;
           flex-direction: column;
-          gap: var(--spacing-md, 16px);
-        }
-
-        .tiles-container {
-          display: flex;
-          gap: var(--spacing-md, 16px);
-          overflow-x: auto;
-          padding-bottom: var(--spacing-md, 16px);
-          transition: background-color 0.2s ease, border-color 0.2s ease;
-          padding: var(--spacing-md, 16px);
-          margin: calc(-1 * var(--spacing-md, 16px));
-          border: 2px dashed transparent;
-          border-radius: 8px;
-        }
-
-        .tiles-container.portrait-mode {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: var(--spacing-md, 16px);
-          max-height: 85vh;
+          height: 100vh;
           overflow: hidden;
         }
 
-        .tiles-container.portrait-mode .image-tile {
+        /* Zoom Controls Row */
+        .zoom-controls {
           display: flex;
-          flex-direction: column;
-          min-height: 0;
-          max-height: 85vh;
-          overflow-y: auto;
-        }
-
-        .tiles-container.portrait-mode .canvas-container {
-          flex: 0 0 auto;
-          min-height: 200px;
-          max-height: 50vh;
-          overflow: auto;
-          position: relative;
-          /* Ensure scrolling works properly */
-          width: 100%;
-        }
-
-        .tiles-container.portrait-mode .image-canvas {
-          display: block;
-          /* Dimensions set via JavaScript in handleZoomChange */
-          /* Ensure canvas dimensions are respected for scrolling */
-          max-width: none !important;
-          max-height: none !important;
+          align-items: center;
+          gap: var(--spacing-md, 16px);
+          padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+          background: var(--color-surface, #fff);
+          border-bottom: 1px solid var(--color-border, #ddd);
           flex-shrink: 0;
         }
 
-        .tiles-container.drag-over {
-          background-color: rgba(0, 123, 255, 0.05);
-          border-color: var(--color-primary, #007bff);
+        .btn-add-images {
+          padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+          background: var(--color-primary, #007bff);
+          color: white;
+          border: none;
+          border-radius: var(--border-radius, 4px);
+          font-size: var(--font-size-sm, 14px);
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 0.2s;
         }
 
-        .tiles-container::-webkit-scrollbar {
+        .btn-add-images:hover {
+          background: var(--color-primary-hover, #0056b3);
+        }
+
+        /* Source Images Row (50vh) */
+        .source-images-row {
+          height: 50vh;
+          display: flex;
+          overflow-x: auto;
+          overflow-y: hidden;
+          background: var(--color-background, #f5f5f5);
+          border-bottom: 2px solid var(--color-border, #ddd);
+        }
+
+        .image-tile {
+          flex: 0 0 auto;
+          min-width: 50vw;
+          max-width: 1000px;
+          width: 50vw;
+          display: flex;
+          flex-direction: column;
+          background: var(--color-surface, #fff);
+          border-right: 1px solid var(--color-border, #ddd);
+        }
+
+        .image-tile:last-child {
+          border-right: none;
+        }
+
+        .canvas-container {
+          flex: 1;
+          position: relative;
+          overflow: auto;
+          background: var(--color-background, #f5f5f5);
+        }
+
+        .image-canvas {
+          display: block;
+          cursor: crosshair;
+        }
+
+        /* Image Controls (below canvas) */
+        .image-controls {
+          flex-shrink: 0;
+          padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+          background: var(--color-surface, #fff);
+          border-top: 1px solid var(--color-border, #ddd);
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-sm, 8px);
+        }
+
+        /* Morph Preview Row (50vh) */
+        .morph-preview-row {
+          height: 50vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-background, #f5f5f5);
+          overflow: hidden;
+        }
+
+        .preview-canvas {
+          max-width: 100%;
+          max-height: 100%;
+          display: block;
+          background: #000;
+        }
+
+        /* Scrollbar styling */
+        .source-images-row::-webkit-scrollbar,
+        .canvas-container::-webkit-scrollbar {
+          width: 8px;
           height: 8px;
         }
 
-        .tiles-container::-webkit-scrollbar-track {
+        .source-images-row::-webkit-scrollbar-track,
+        .canvas-container::-webkit-scrollbar-track {
           background: var(--color-surface, #fff);
-          border-radius: 4px;
         }
 
-        .tiles-container::-webkit-scrollbar-thumb {
+        .source-images-row::-webkit-scrollbar-thumb,
+        .canvas-container::-webkit-scrollbar-thumb {
           background: var(--color-border, #ddd);
           border-radius: 4px;
         }
 
-        .tiles-container::-webkit-scrollbar-thumb:hover {
+        .source-images-row::-webkit-scrollbar-thumb:hover,
+        .canvas-container::-webkit-scrollbar-thumb:hover {
           background: var(--color-border-hover, #ccc);
-        }
-
-        .image-tile {
-          flex: 0 0 calc(300px * var(--zoom-level, 1));
-          background: var(--color-surface, #fff);
-          border-radius: 8px;
-          padding: var(--spacing-md, 16px);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          display: flex;
-          flex-direction: column;
-          gap: var(--spacing-sm, 8px);
-          transition: flex-basis 0.2s ease;
-        }
-
-        .canvas-container {
-          width: 100%;
-          height: calc(200px * var(--zoom-level, 1));
-          background: var(--color-background, #f5f5f5);
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          position: relative;
-          transition: height 0.2s ease;
-        }
-
-        .canvas-placeholder {
-          color: var(--color-text-secondary, #999);
-          font-size: var(--font-size-sm, 14px);
-          position: absolute;
-          z-index: 1;
-        }
-
-        .image-canvas {
-          width: 100%;
-          height: 100%;
-          display: block;
-          image-rendering: auto;
-        }
-
-        .image-info {
-          display: flex;
-          flex-direction: column;
-          gap: var(--spacing-xs, 4px);
-        }
-
-        .url-label {
-          font-size: var(--font-size-sm, 14px);
-          color: var(--color-text-secondary, #666);
-          display: flex;
-          flex-direction: column;
-          gap: var(--spacing-xs, 4px);
-        }
-
-        .url-input {
-          width: 100%;
-          padding: 6px 8px;
-          border: 1px solid var(--color-border, #ddd);
-          border-radius: 4px;
-          font-size: var(--font-size-sm, 14px);
-          transition: border-color var(--transition-fast, 150ms ease);
-        }
-
-        .url-input:focus {
-          outline: none;
-          border-color: var(--color-primary, #007bff);
         }
 
         .weight-control {
@@ -722,13 +650,9 @@ class GuiProject extends BaseComponent {
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        .image-actions {
-          display: flex;
-          gap: var(--spacing-xs, 4px);
-        }
-
-        .btn-remove {
-          flex: 1;
+        /* Delete button */
+        .btn-delete {
+          width: 100%;
           padding: 8px 12px;
           background: var(--color-danger, #dc3545);
           color: white;
@@ -739,103 +663,8 @@ class GuiProject extends BaseComponent {
           transition: background var(--transition-fast, 150ms ease);
         }
 
-        .btn-remove:hover {
+        .btn-delete:hover {
           background: var(--color-danger-hover, #c82333);
-        }
-
-        .add-tile {
-          flex: 0 0 300px;
-          background: var(--color-surface, #fff);
-          border: 2px dashed var(--color-border, #ddd);
-          border-radius: 8px;
-          padding: var(--spacing-md, 16px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all var(--transition-fast, 150ms ease);
-        }
-
-        .add-tile:hover {
-          border-color: var(--color-primary, #007bff);
-          background: var(--color-surface-hover, #f8f9fa);
-        }
-
-        .add-tile-content {
-          text-align: center;
-          color: var(--color-text-secondary, #666);
-        }
-
-        .add-icon {
-          font-size: 48px;
-          margin-bottom: var(--spacing-sm, 8px);
-          color: var(--color-primary, #007bff);
-        }
-
-        .add-text {
-          font-size: var(--font-size-md, 16px);
-        }
-
-        .file-input {
-          display: none;
-        }
-
-        .empty-state {
-          text-align: center;
-          padding: var(--spacing-xl, 32px);
-          color: var(--color-text-secondary, #999);
-        }
-
-        .preview-section {
-          background: var(--color-surface, #fff);
-          border-radius: 8px;
-          padding: var(--spacing-lg, 24px);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .preview-title {
-          font-size: var(--font-size-lg, 18px);
-          font-weight: 600;
-          margin-bottom: var(--spacing-md, 16px);
-          color: var(--color-text, #333);
-        }
-
-        .preview-canvas-container {
-          width: 100%;
-          max-width: 800px;
-          margin: 0 auto;
-          background: var(--color-background, #f5f5f5);
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 400px;
-          overflow: hidden;
-        }
-
-        .preview-canvas {
-          max-width: 100%;
-          height: auto;
-          display: block;
-          border: 1px solid var(--color-border, #ddd);
-          background: #000;
-        }
-
-        .preview-placeholder {
-          color: var(--color-text-secondary, #999);
-          text-align: center;
-          padding: var(--spacing-xl, 32px);
-        }
-
-        .zoom-controls {
-          display: flex;
-          align-items: center;
-          gap: var(--spacing-md, 16px);
-          padding: var(--spacing-md, 16px);
-          background: var(--color-surface, #fff);
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          margin-bottom: var(--spacing-md, 16px);
         }
 
         .zoom-label {
@@ -910,33 +739,6 @@ class GuiProject extends BaseComponent {
           font-weight: 600;
           color: var(--color-primary, #007bff);
         }
-
-        .view-mode-toggle {
-          margin-left: auto;
-          padding: 8px 16px;
-          background: var(--color-surface, #fff);
-          border: 2px solid var(--color-primary, #007bff);
-          border-radius: 4px;
-          font-size: var(--font-size-sm, 14px);
-          cursor: pointer;
-          transition: all var(--transition-fast, 150ms ease);
-          color: var(--color-primary, #007bff);
-          font-weight: 600;
-        }
-
-        .view-mode-toggle:hover {
-          background: var(--color-primary, #007bff);
-          color: white;
-        }
-
-        .view-mode-toggle:active {
-          transform: scale(0.95);
-        }
-
-        .view-mode-toggle.active {
-          background: var(--color-primary, #007bff);
-          color: white;
-        }
       </style>
     `;
   }
@@ -1005,29 +807,22 @@ class GuiProject extends BaseComponent {
     }
 
     const images = this.project.images;
-    const hasImages = images.length > 0;
 
     this.shadowRoot.innerHTML = `
       ${this.getStyles()}
 
-      <div class="project" style="--zoom-level: ${this.zoomLevel}">
-        ${hasImages ? `
-          ${this.getZoomControlsTemplate()}
-          <div class="tiles-container ${this.viewMode === 'portrait' ? 'portrait-mode' : ''}">
-            ${images.map(image => this.getImageTileTemplate(image)).join('')}
-            ${this.getAddImageTileTemplate()}
-          </div>
-        ` : this.getEmptyStateTemplate()}
+      <div class="project">
+        ${this.getZoomControlsTemplate()}
 
-        ${hasImages && images.length >= 2 ? this.getPreviewSectionTemplate() : ''}
+        <div class="source-images-row">
+          ${images.map(image => this.getImageTileTemplate(image)).join('')}
+        </div>
 
-        <input
-          type="file"
-          id="file-input"
-          class="file-input"
-          accept="image/*"
-          multiple
-        />
+        <div class="morph-preview-row">
+          <canvas id="preview-canvas" class="preview-canvas"></canvas>
+        </div>
+
+        <input type="file" id="file-input" class="file-input" accept="image/*" multiple />
       </div>
     `;
 
@@ -1035,27 +830,10 @@ class GuiProject extends BaseComponent {
     this.addImageEventListeners();
     this.drawCanvases();
 
-    // Apply saved zoom level and view mode settings after DOM is ready
+    // Initialize morpher and apply zoom after DOM is ready
     requestAnimationFrame(() => {
-      // Apply zoom level to CSS variable
-      const projectContainer = this.query('.project');
-      if (projectContainer) {
-        projectContainer.style.setProperty('--zoom-level', this.zoomLevel);
-      }
-
-      // Apply zoom to portrait mode canvases if needed
-      if (this.viewMode === 'portrait') {
-        const canvases = this.queryAll('.image-canvas');
-        canvases.forEach(canvas => {
-          // Get the natural dimensions from dataset (stored during image load)
-          const naturalWidth = parseFloat(canvas.dataset.naturalWidth) || canvas.width;
-          const naturalHeight = parseFloat(canvas.dataset.naturalHeight) || canvas.height;
-          canvas.style.width = `${naturalWidth * this.zoomLevel}px`;
-          canvas.style.height = `${naturalHeight * this.zoomLevel}px`;
-        });
-      }
-
       this.initMorpher();
+      this.handleZoomChange();
     });
   }
 
@@ -1114,9 +892,8 @@ class GuiProject extends BaseComponent {
         canvas.dataset.naturalHeight = img.naturalHeight;
 
         // Set canvas buffer dimensions
-        // In portrait mode with zoom, use natural dimensions to allow full scrolling
-        // In other modes, use rendered size
-        if (this.viewMode === 'portrait' && this.zoomLevel !== 1.0) {
+        // When zoomed, use natural dimensions to allow full scrolling
+        if (this.zoomLevel !== 1.0) {
           // Use natural dimensions for canvas buffer so we can scroll the full zoomed image
           canvas.width = img.naturalWidth;
           canvas.height = img.naturalHeight;
@@ -1234,7 +1011,6 @@ class GuiProject extends BaseComponent {
 
   addImageEventListeners() {
     this.addWeightSliderListeners();
-    this.addUrlInputListeners();
     this.addCanvasInteractionListeners();
     this.addDeleteButtonListeners();
   }
@@ -1312,37 +1088,6 @@ class GuiProject extends BaseComponent {
       // change = on release (save to localStorage)
       this.addTrackedListener(slider, 'input', handleWeightInput);
       this.addTrackedListener(slider, 'change', handleWeightChange);
-    });
-  }
-
-  /**
-   * Add event listeners for URL inputs
-   */
-  addUrlInputListeners() {
-    const urlInputs = this.queryAll('.url-input');
-    urlInputs.forEach(input => {
-      this.addTrackedListener(input, 'change', async (e) => {
-        const imageId = e.target.dataset.imageId;
-        const url = e.target.value.trim();
-        const image = this.findImageById(imageId);
-
-        if (!image) {
-          return;
-        }
-
-        if (url) {
-          // Set URL and try to load the image
-          image.setUrl(url);
-          try {
-            await image.loadFromUrl(url);
-            this.project.save();
-            this.drawCanvases();
-          } catch (error) {
-            alert(`Failed to load image from URL: ${error.message}`);
-            e.target.value = image.url || '';
-          }
-        }
-      });
     });
   }
 
@@ -1517,6 +1262,21 @@ class GuiProject extends BaseComponent {
           this.drawCanvases();
         }
       });
+
+      // Track scroll position for this canvas container
+      const canvasContainer = canvas.parentElement; // .canvas-container
+      if (canvasContainer) {
+        this.addTrackedListener(canvasContainer, 'scroll', () => {
+          this.saveCanvasScrollPosition(imageId, canvasContainer);
+        });
+
+        // Restore scroll position after DOM is painted
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.restoreCanvasScrollPosition(imageId, canvasContainer);
+          });
+        });
+      }
     });
   }
 
@@ -1535,6 +1295,20 @@ class GuiProject extends BaseComponent {
         }
       });
     });
+  }
+
+  /**
+   * Force reinitialize the morpher preview (used when points/triangles change)
+   */
+  reinitMorpherPreview() {
+    // Dispose existing morpher to force full reinit
+    if (this.morpher) {
+      this.morpher.dispose();
+      this.morpher = null;
+    }
+
+    // Reinitialize from scratch
+    this.initMorpher();
   }
 
   /**
@@ -1558,6 +1332,14 @@ class GuiProject extends BaseComponent {
       return;
     }
 
+    // Size the preview canvas to fill its container
+    const previewContainer = previewCanvas.parentElement;
+    if (previewContainer) {
+      const containerRect = previewContainer.getBoundingClientRect();
+      previewCanvas.width = containerRect.width;
+      previewCanvas.height = containerRect.height;
+    }
+
     // Create new morpher if needed
     if (!this.morpher) {
       this.morpher = new Morpher();
@@ -1574,7 +1356,7 @@ class GuiProject extends BaseComponent {
 
       // Listen for draw events
       this.morpher.addEventListener('draw', (e) => {
-        console.log('🎨 Morpher drew with weights:', this.morpher.images.map((img, i) => `[${i}]=${img.weight.toFixed(2)}`).join(' '));
+        // Morpher draw complete
       });
     } else {
       // Clear existing images if reinitializing
@@ -1661,8 +1443,6 @@ class GuiProject extends BaseComponent {
     const needsPointSync = firstMorpherImage.points.length !== firstGuiImage.points.length;
 
     if (needsPointSync) {
-      console.log('🔄 Syncing points:', firstGuiImage.points.length, 'GUI points vs', firstMorpherImage.points.length, 'morpher points');
-
       // Remove extra points from morpher (from all images)
       while (firstMorpherImage.points.length > firstGuiImage.points.length) {
         const lastPoint = firstMorpherImage.points[firstMorpherImage.points.length - 1];
@@ -1685,7 +1465,6 @@ class GuiProject extends BaseComponent {
 
           // Add point to this specific image (silent to prevent intermediate redraws)
           morpherImg.addPoint({ x: absX, y: absY }, { silent: true });
-          console.log(`  Image ${imgIdx} point ${i}: GUI(${point.x.toFixed(3)}, ${point.y.toFixed(3)}) -> (${absX.toFixed(1)}, ${absY.toFixed(1)})`);
         });
       }
 
@@ -1696,6 +1475,42 @@ class GuiProject extends BaseComponent {
         const absY = point.y * imgHeight;
         this.morpher.mesh.addPoint({ x: absX, y: absY });
       }
+    }
+
+    // Update positions of existing points in all morpher images
+    // This is critical for dragging to work correctly
+    this.morpher.images.forEach((morpherImg, imgIdx) => {
+      const guiImg = this.project.images[imgIdx];
+      if (!guiImg) return;
+
+      const imgW = morpherImg.el.naturalWidth || morpherImg.el.width;
+      const imgH = morpherImg.el.naturalHeight || morpherImg.el.height;
+
+      // Update each point's position
+      for (let i = 0; i < Math.min(morpherImg.points.length, guiImg.points.length); i++) {
+        const guiPoint = guiImg.points[i];
+        const morpherPoint = morpherImg.points[i];
+
+        // Convert from normalized (0-1) to absolute pixel coordinates
+        const absX = guiPoint.x * imgW;
+        const absY = guiPoint.y * imgH;
+
+        // Update morpher point position
+        morpherPoint.x = absX;
+        morpherPoint.y = absY;
+      }
+    });
+
+    // Also update mesh points (use first image's coordinates)
+    for (let i = 0; i < Math.min(this.morpher.mesh.points.length, firstGuiImage.points.length); i++) {
+      const guiPoint = firstGuiImage.points[i];
+      const meshPoint = this.morpher.mesh.points[i];
+
+      const absX = guiPoint.x * imgWidth;
+      const absY = guiPoint.y * imgHeight;
+
+      meshPoint.x = absX;
+      meshPoint.y = absY;
     }
 
     // Sync triangles
@@ -1710,8 +1525,6 @@ class GuiProject extends BaseComponent {
    */
   syncMorpherTriangles() {
     if (!this.morpher || !this.project) return;
-
-    console.log(`🔺 Syncing ${this.project.triangles.length} triangles to morpher`);
 
     // Clear existing triangles from morpher
     while (this.morpher.triangles.length > 0) {
@@ -1729,8 +1542,6 @@ class GuiProject extends BaseComponent {
     this.project.triangles.forEach((triangle, idx) => {
       this.morpher.addTriangle(triangle[0], triangle[1], triangle[2]);
     });
-
-    console.log(`  Morpher now has ${this.morpher.triangles.length} triangles`);
   }
 
   /**

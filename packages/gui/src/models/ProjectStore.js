@@ -57,13 +57,18 @@ class ProjectStore extends EventTarget {
     try {
       // Get list of project IDs
       const projectIds = this.storage.getItem(PROJECTS_INDEX_KEY, []);
+      console.log('[ProjectStore] Loading projects, found IDs:', projectIds);
 
       // Load each project
       this.projects = projectIds
         .map(id => {
           try {
             const data = this.storage.getItem(`project_${id}`);
-            return data ? Project.fromJSON(data) : null;
+            if (data) {
+              console.log(`[ProjectStore] Loaded project ${id}:`, data.name);
+              return Project.fromJSON(data);
+            }
+            return null;
           } catch (e) {
             console.error(`Failed to load project ${id}:`, e);
             return null;
@@ -73,6 +78,7 @@ class ProjectStore extends EventTarget {
 
       // Load current index
       this.currentIndex = this.storage.getItem(CURRENT_INDEX_KEY, 0);
+      console.log('[ProjectStore] Loaded projects:', this.projects.length, 'current index:', this.currentIndex);
 
       // Ensure index is valid
       if (this.currentIndex >= this.projects.length) {
@@ -81,6 +87,7 @@ class ProjectStore extends EventTarget {
 
       // Create default project if none exist
       if (this.projects.length === 0) {
+        console.log('[ProjectStore] No projects found, creating default');
         this.create({ name: 'Default Project' });
       }
 
