@@ -78,32 +78,36 @@ This file tracks tasks for building the new GUI application using Vite and Web C
 ## Phase 4: Image Editing Components
 
 ### Image Tile
-- [ ] Create `<gui-image-tile>` component
-- [ ] Implement canvas rendering
-- [ ] Implement file upload (drag-and-drop + file picker)
+- [x] Create image tile component (inline in `<gui-project>`)
+- [x] Implement canvas rendering
+- [x] Implement file upload (file picker)
+- [x] Implement drag-and-drop file upload
 - [ ] Implement URL input
 - [ ] Implement image position (move mode)
-- [ ] Implement weight slider
-- [ ] Add delete image functionality
+- [x] Implement weight slider with normalization
+- [x] Add delete image functionality
+- [x] Add Sitecore ID field for external reference
 
 ### Mesh Editing
 - [ ] Create `<gui-point>` draggable component
 - [ ] Create `<gui-midpoint>` split component
-- [ ] Implement point addition on canvas click
-- [ ] Implement point dragging
-- [ ] Implement point deletion
-- [ ] Implement triangle creation (3 points)
+- [x] Implement point addition on canvas click
+- [x] Implement point dragging
+- [x] Implement point deletion (Shift+click)
+- [x] Implement automatic triangulation
+- [ ] Implement manual triangle creation (3 points)
 - [ ] Implement edge splitting (midpoint click)
-- [ ] Implement mesh visualization (grid pattern)
-- [ ] Sync mesh across all images in project
+- [x] Implement mesh visualization (points and triangles)
+- [x] Sync mesh across all images in project
 
 ---
 
 ## Phase 5: Advanced Features
 
 ### Popup System
-- [ ] Create `<gui-popup>` modal component
-- [ ] Implement help dialog
+- [x] Create modal component (JSON modal inline in `<gui-project>`)
+- [x] Implement help dialog (in `<gui-app>`)
+- [x] Implement JSON view/edit dialog (project-level)
 - [ ] Implement code export dialog
 - [ ] Implement custom function editor dialogs
 - [ ] Add syntax highlighting for code
@@ -114,18 +118,26 @@ This file tracks tasks for building the new GUI application using Vite and Web C
 - [ ] Add function validation
 - [ ] Add error handling for invalid functions
 
+### Additional Features Implemented
+- [x] Zoom controls (0.25x - 10x)
+- [x] Morpher preview with real-time blending
+- [x] Synchronized canvas scrolling across images
+- [x] Canvas scroll position persistence (localStorage)
+- [x] Copy to clipboard from JSON modal
+- [x] Project-level JSON export/import
+
 ---
 
 ## Phase 6: Styling & Polish
 
 ### CSS & Design
-- [ ] Create global styles (src/styles/main.css)
-- [ ] Create CSS reset (src/styles/reset.css)
-- [ ] Create CSS variables (src/styles/variables.css)
-- [ ] Import icon font (src/styles/fonts.css)
-- [ ] Add component-specific styles
-- [ ] Implement responsive layout
-- [ ] Add animations and transitions
+- [x] Create global styles (src/styles/main.css)
+- [x] Create CSS reset (src/styles/reset.css)
+- [x] Create CSS variables (src/styles/variables.css)
+- [x] Import icon font (src/styles/fonts.css)
+- [x] Add component-specific styles (inline in components)
+- [ ] Implement responsive layout (partially done)
+- [x] Add animations and transitions
 - [ ] Test across browsers (Chrome, Firefox, Safari, Edge)
 
 ---
@@ -133,19 +145,19 @@ This file tracks tasks for building the new GUI application using Vite and Web C
 ## Phase 7: Integration & Testing
 
 ### Morpher Library Integration
-- [ ] Integrate @morpher-js/morpher package
-- [ ] Test image loading and rendering
-- [ ] Test mesh synchronization
-- [ ] Test weight blending
-- [ ] Test animation
-- [ ] Test JSON export/import
+- [x] Integrate @morpher-js/morpher package
+- [x] Test image loading and rendering
+- [x] Test mesh synchronization
+- [x] Test weight blending
+- [ ] Test animation (basic animation works)
+- [x] Test JSON export/import
 
 ### Testing
-- [ ] Write unit tests for all models
-- [ ] Write unit tests for all utilities
-- [ ] Write component tests
+- [x] Write unit tests for all models (Image, Project, ProjectStore)
+- [x] Write unit tests for all utilities (colors, storage, id-generator)
+- [x] Write component tests (BaseComponent)
 - [ ] Write integration tests
-- [ ] Achieve >70% code coverage
+- [ ] Achieve >70% code coverage (currently ~60%)
 - [ ] Manual testing checklist
 
 ---
@@ -183,7 +195,7 @@ This file tracks tasks for building the new GUI application using Vite and Web C
 
 ## Notes
 
-**Current Focus:** Phase 3 - Core Components (Complete ✅)
+**Current Focus:** Phase 8 - Documentation & Deployment
 
 **Completed:**
 - Phase 1: Foundation & Setup (20/20 tasks) ✅
@@ -202,6 +214,30 @@ This file tracks tasks for building the new GUI application using Vite and Web C
   - Image upload and management
   - Weight sliders for blend control
   - Project color theming
+- Phase 4: Image Editing Components (13/17 tasks) 🔄
+  - Image tile with canvas rendering
+  - File upload (file picker + drag-and-drop)
+  - Weight sliders with automatic normalization
+  - Delete image functionality
+  - Sitecore ID field for external references
+  - Point addition, dragging, and deletion
+  - Automatic triangulation and mesh visualization
+  - Mesh synchronization across images
+- Phase 5: Advanced Features (9/12 tasks) 🔄
+  - JSON view/edit dialog (project-level)
+  - Help dialog
+  - Zoom controls with persistence
+  - Real-time morpher preview
+  - Synchronized canvas scrolling
+  - Copy to clipboard functionality
+- Phase 6: Styling & Polish (6/8 tasks) 🔄
+  - Global styles, reset, variables, fonts
+  - Component-specific styles
+  - Animations and transitions
+- Phase 7: Integration & Testing (9/12 tasks) 🔄
+  - Morpher library integration
+  - Unit tests for models and utilities
+  - Component tests for BaseComponent
 
 **Test Results:**
 - BaseComponent: 28/28 tests passing ✅
@@ -214,7 +250,13 @@ This file tracks tasks for building the new GUI application using Vite and Web C
 **Blockers:** None
 
 **Next Steps:**
-1. Proceed to Phase 4: Image Editing Components
-2. Create `<gui-image-tile>` with canvas rendering
-3. Create `<gui-point>` and `<gui-midpoint>` for mesh editing
-4. Implement drag-and-drop file upload
+1. Complete remaining Phase 4 tasks (URL input, image position/move mode)
+2. Complete Phase 5 tasks (code export, custom function editors)
+3. Improve test coverage (>70% target)
+4. Cross-browser testing
+5. Documentation and deployment
+
+**Recent Additions:**
+- Added Sitecore ID field to images for external reference tracking
+- Moved JSON view/edit to project-level (was per-image)
+- Sitecore ID stored in JSON and displayed inline with Delete button
