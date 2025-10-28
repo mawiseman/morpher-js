@@ -61,12 +61,18 @@ Before starting a task, check if it depends on other tasks:
 
 ### Step 4: Test Changes
 ```bash
-# IMPORTANT: Before testing, kill any existing Node.js/Vite dev servers
+# IMPORTANT: Before testing, kill any existing dev servers on port conflicts
 # to avoid port conflicts and ensure clean testing environment
-# On Windows:
-taskkill /F /IM node.exe
-# On Linux/Mac:
-pkill node
+# On Windows (kill processes listening on port 3000, typical Vite port):
+netstat -ano | findstr :3000
+# Then kill the specific PID if found:
+taskkill /F /PID <pid_number>
+
+# On Linux/Mac (kill processes on port 3000):
+lsof -ti:3000 | xargs kill -9
+
+# Alternative: Use npm scripts to handle port management automatically
+# Or check for port availability before starting
 
 # Run existing tests (if any)
 npm test

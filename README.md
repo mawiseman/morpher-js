@@ -1,8 +1,23 @@
 # MorpherJS
 
-MorpherJS is a JavaScript image morphing library. It uses HTML 5 canvas element.
+> Modern JavaScript image morphing library using HTML5 Canvas with mesh-based transformations.
 
 **Version 2.0** - Complete rewrite in modern ES6+ JavaScript with Vite build system and monorepo structure.
+
+## Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Run demos (http://localhost:3000)
+npm run dev:demos
+
+# Build library
+npm run build:lib
+```
+
+**Try it:** Open http://localhost:3000 after running `npm run dev:demos` to see interactive examples.
 
 ## Features
 
@@ -18,17 +33,28 @@ MorpherJS is a JavaScript image morphing library. It uses HTML 5 canvas element.
 
 ## Monorepo Structure
 
-This repository is organized as a monorepo containing three packages:
+This repository is organized as a monorepo with shared tooling and optimized dependency management:
 
 ```
 morpher-js/
 ├── packages/
 │   ├── morpher/          # Core morphing library (publishable to npm)
-│   ├── gui/              # React-based visual editor
+│   ├── gui/              # Web Components-based visual editor
 │   └── demos/            # Example demonstrations
 ├── docs/                 # Shared documentation
-└── scripts/              # Build utilities
+├── scripts/              # Build utilities
+├── eslint.config.js      # Shared ESLint configuration
+├── .prettierrc.json      # Shared Prettier configuration
+├── .npmrc                # Workspace configuration
+└── package.json          # Root workspace with hoisted dependencies
 ```
+
+**Benefits of the monorepo setup:**
+- ✅ Shared tooling (ESLint, Prettier, TypeScript, Vite)
+- ✅ Consistent code style across all packages
+- ✅ Workspace dependencies with `workspace:*` protocol
+- ✅ Hoisted dependencies reduce install time and disk space
+- ✅ Simplified development workflow with root scripts
 
 ## Quick Start
 
@@ -41,16 +67,32 @@ npm install
 ### Running the Project
 
 ```bash
-# Run all development servers
-npm run dev:lib      # Library (watch mode)
-npm run dev:demos    # Demos site (localhost:3000)
+# Development - Run individual packages
+npm run dev:lib      # Core library (watch mode)
 npm run dev:gui      # GUI editor (localhost:3001)
+npm run dev:demos    # Demos site (localhost:3000)
+npm run dev          # Run all packages in parallel
 
-# Build all packages
-npm run build        # Build everything
-npm run build:lib    # Build library only
-npm run build:demos  # Build demos only
+# Building
+npm run build        # Build all packages
+npm run build:lib    # Build core library only
 npm run build:gui    # Build GUI only
+npm run build:demos  # Build demos only
+
+# Testing
+npm run test         # Run all tests
+npm run test:lib     # Test core library
+npm run test:gui     # Test GUI
+
+# Code Quality
+npm run lint         # Lint all packages
+npm run format       # Format code with Prettier
+
+# Maintenance
+npm run clean        # Clean all build artifacts and node_modules
+npm run clean:lib    # Clean library only
+npm run clean:gui    # Clean GUI only
+npm run clean:demos  # Clean demos only
 ```
 
 ### Using the Library
@@ -399,20 +441,49 @@ npm test             # Run tests (all packages)
 
 ### Working with the Monorepo
 
-The repository uses **npm workspaces** for package management. All packages are automatically linked together during `npm install`.
+The repository uses **npm workspaces** with optimized dependency hoisting and workspace protocol for efficient package management.
+
+**Key Features:**
+- ✅ **Hoisted dependencies** - Shared dev tools (Vite, ESLint, Prettier) installed once at root
+- ✅ **Workspace linking** - Packages reference each other with `*` (npm workspaces)
+- ✅ **Automatic linking** - All packages automatically linked during `npm install`
+- ✅ **Shared configuration** - ESLint and Prettier configs shared across all packages
 
 **Adding dependencies:**
 ```bash
-# Add to root (shared dev dependencies)
-npm install -D vite
+# Add shared dev dependency to root
+npm install -D vitest
 
-# Add to specific package
-npm install react -w @morpher-js/gui
+# Add dependency to specific package
+npm install lit-html -w @morpher-js/gui
 npm install lodash -w morpher-js
+
+# Add workspace dependency (references local package)
+# Already configured - morpher-js references use "*"
 ```
 
-**Testing changes across packages:**
-When you modify the core library, the demos and GUI automatically use the local version (no need to rebuild or npm link).
+**Development workflow:**
+```bash
+# 1. Install dependencies (hoisted to root automatically)
+npm install
+
+# 2. Start development server for package you're working on
+npm run dev:gui      # or dev:lib, dev:demos
+
+# 3. Changes to core library automatically reflect in GUI/demos
+#    (no rebuild needed - workspace linking handles this)
+
+# 4. Before committing
+npm run lint         # Check code style
+npm run format       # Auto-fix formatting
+npm run test         # Run all tests
+```
+
+**Monorepo best practices:**
+- Shared tooling at root reduces duplication
+- Each package can override config if needed
+- Use `*` for internal dependencies in npm workspaces
+- Hoist common dependencies to reduce install time
 
 ### Testing
 
@@ -597,7 +668,7 @@ Requires modern browser with:
 - requestAnimationFrame
 - performance.now()
 
-Tested on Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+**Tested on latest versions of:** Chrome, Firefox, Safari, Edge
 
 ## Documentation
 
@@ -616,10 +687,16 @@ Tested on Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
 - **[docs/WEBGL_RENDERER.md](docs/WEBGL_RENDERER.md)** - WebGL renderer implementation guide (planned)
 - **[docs/WEBGPU_RENDERER.md](docs/WEBGPU_RENDERER.md)** - WebGPU renderer roadmap (future)
 
+### Development Documentation
+
+- **[docs/GUI_DEVELOPMENT.md](docs/GUI_DEVELOPMENT.md)** - GUI product requirements and specifications
+- **[docs/GUI_PLANNING.md](docs/GUI_PLANNING.md)** - GUI technical planning and architecture
+
 ### Package Documentation
 
 - **[packages/morpher/README.md](packages/morpher/README.md)** - Core library documentation
 - **[packages/gui/README.md](packages/gui/README.md)** - GUI editor documentation
+- **[packages/gui/TASKS.md](packages/gui/TASKS.md)** - GUI development task list
 - **[packages/demos/README.md](packages/demos/README.md)** - Demos overview
 
 ## License

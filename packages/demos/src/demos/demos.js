@@ -36,7 +36,7 @@ function initDemo1() {
           { x: 126, y: 220 }, { x: 0, y: 137 }, { x: 98, y: 14 }, { x: 88, y: 11 },
           { x: 130, y: 17 }, { x: 149, y: 22 }, { x: 174, y: 43 }, { x: 202, y: 61 }
         ],
-        src: '../images/plum.png'
+        src: '/src/images/plum.png'
       },
       {
         points: [
@@ -46,7 +46,7 @@ function initDemo1() {
           { x: 187, y: 266 }, { x: 49, y: 274 }, { x: 29, y: 102 }, { x: 0, y: 135 },
           { x: 8, y: 69 }, { x: 96, y: 52 }, { x: 127, y: 68 }, { x: 229, y: 99 }
         ],
-        src: '../images/raspberry.png'
+        src: '/src/images/raspberry.png'
       }
     ],
     triangles: [
@@ -94,7 +94,7 @@ function initDemo2() {
           { x: 87, y: 167 }, { x: 75, y: 179 }, { x: 75, y: 239 }, { x: 138, y: 200 },
           { x: 130, y: 226 }, { x: 75, y: 224.5 }
         ],
-        src: '../images/parrot-1.jpg',
+        src: '/src/images/parrot-1.jpg',
         x: 0,
         y: 0
       },
@@ -108,7 +108,7 @@ function initDemo2() {
           { x: 74, y: 131 }, { x: 65, y: 143 }, { x: 102, y: 210 }, { x: 134, y: 149 },
           { x: 135, y: 177 }, { x: 101, y: 196 }
         ],
-        src: '../images/parrot-2.jpg',
+        src: '/src/images/parrot-2.jpg',
         x: 0,
         y: 0
       },
@@ -122,7 +122,7 @@ function initDemo2() {
           { x: 122, y: 169 }, { x: 68, y: 178 }, { x: 124.5, y: 250.5 }, { x: 171, y: 190 },
           { x: 164.5, y: 223 }, { x: 125.25, y: 239.75 }
         ],
-        src: '../images/parrot-3.jpg',
+        src: '/src/images/parrot-3.jpg',
         x: 0,
         y: 0
       }
@@ -182,7 +182,7 @@ function initDemo3() {
           { x: 126, y: 220 }, { x: 0, y: 137 }, { x: 98, y: 14 }, { x: 88, y: 11 },
           { x: 130, y: 17 }, { x: 149, y: 22 }, { x: 174, y: 43 }, { x: 202, y: 61 }
         ],
-        src: '../images/plum.png'
+        src: '/src/images/plum.png'
       },
       {
         points: [
@@ -192,7 +192,7 @@ function initDemo3() {
           { x: 187, y: 266 }, { x: 49, y: 274 }, { x: 29, y: 102 }, { x: 0, y: 135 },
           { x: 8, y: 69 }, { x: 96, y: 52 }, { x: 127, y: 68 }, { x: 229, y: 99 }
         ],
-        src: '../images/raspberry.png'
+        src: '/src/images/raspberry.png'
       }
     ],
     triangles: [
@@ -236,7 +236,7 @@ function initDemo4() {
           { x: 126, y: 220 }, { x: 0, y: 137 }, { x: 98, y: 14 }, { x: 88, y: 11 },
           { x: 130, y: 17 }, { x: 149, y: 22 }, { x: 174, y: 43 }, { x: 202, y: 61 }
         ],
-        src: '../images/plum-contour.png'
+        src: '/src/images/plum-contour.png'
       },
       {
         points: [
@@ -246,7 +246,7 @@ function initDemo4() {
           { x: 187, y: 266 }, { x: 49, y: 274 }, { x: 29, y: 102 }, { x: 0, y: 135 },
           { x: 8, y: 69 }, { x: 96, y: 52 }, { x: 127, y: 68 }, { x: 229, y: 99 }
         ],
-        src: '../images/raspberry-contour.png'
+        src: '/src/images/raspberry-contour.png'
       }
     ],
     triangles: [
@@ -341,12 +341,12 @@ function initDemo5() {
   const preview = demo.querySelector('.preview');
 
   // Add first image using JSON
-  morpher.addImage({ src: '/images/parrot-1.jpg' });
+  morpher.addImage({ src: '/src/images/parrot-1.jpg' });
 
   // Add second image using Image class
   const image2 = new MorpherImage();
   const img = new window.Image();
-  img.src = '/images/parrot-2.jpg';
+  img.src = '/src/images/parrot-2.jpg';
   image2.setImage(img);
   morpher.addImage(image2);
 

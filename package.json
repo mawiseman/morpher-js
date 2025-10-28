@@ -8,14 +8,24 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "npm-run-all --parallel dev:gui dev:demos",
+    "dev:all": "npm-run-all --parallel dev:lib dev:gui dev:demos",
+    "dev:lib": "npm run dev -w morpher-js",
+    "dev:gui": "npm run dev -w @morpher-js/gui",
+    "dev:demos": "npm run dev -w @morpher-js/demos",
     "build": "npm run build --workspaces --if-present",
     "build:lib": "npm run build -w morpher-js",
+    "build:gui": "npm run build -w @morpher-js/gui",
     "build:demos": "npm run build -w @morpher-js/demos",
-    "dev:lib": "npm run dev -w morpher-js",
-    "dev:demos": "npm run dev -w @morpher-js/demos",
     "test": "npm run test --workspaces --if-present",
-    "clean": "node scripts/clean.js",
-    "lint": "npm run lint --workspaces --if-present"
+    "test:lib": "npm run test -w morpher-js",
+    "test:gui": "npm run test -w @morpher-js/gui",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "npm run format --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rimraf node_modules",
+    "clean:lib": "npm run clean -w morpher-js",
+    "clean:gui": "npm run clean -w @morpher-js/gui",
+    "clean:demos": "npm run clean -w @morpher-js/demos"
   },
   "keywords": [
     "morphing",
@@ -38,10 +48,21 @@
   "homepage": "http://jembezmamy.github.io/morpher-js/",
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.4",
+    "@vitest/ui": "4.0.4",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "npm-run-all": "4.1.5",
+    "prettier": "^3.1.0",
+    "rimraf": "^5.0.0",
     "terser": "^5.44.0",
-    "vite": "^5.0.0"
+    "typescript": "^5.3.0",
+    "vite": "7.1.12",
+    "vitest": "4.0.4"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "happy-dom": "20.0.8"
   }
 }

@@ -38,16 +38,16 @@ Thank you for your interest in contributing to MorpherJS! This guide will help y
 
 3. **Start development server:**
    ```bash
-   npm run dev
+   npm run dev:demos
    ```
 
 4. **Open browser:**
    Navigate to `http://localhost:3000`
 
 5. **Verify everything works:**
-   - Landing page loads
-   - GUI editor works (`/gui.html`)
-   - Demos work (`/demos/`)
+   - Demos load and function correctly
+   - Images display properly
+   - Morphing animations work
 
 ---
 
@@ -57,43 +57,74 @@ Thank you for your interest in contributing to MorpherJS! This guide will help y
 
 ```
 morpher-js/
-├── src/                   # Library source code
-│   ├── index.js          # Main entry point
-│   ├── morpher.js        # Core Morpher class
-│   ├── image.js          # Image class
-│   ├── mesh.js           # Mesh class
-│   ├── triangle.js       # Triangle class
-│   ├── point.js          # Point class
-│   ├── matrix.js         # Matrix utilities
-│   ├── event-dispatcher.js  # Event system
-│   └── gui/              # React GUI editor
-├── examples/             # Demo applications
-├── tests/                # Test files
-├── docs/                 # Documentation
-├── dist/                 # Built output (generated)
-└── vite.config.js        # Build configuration
+├── packages/
+│   ├── morpher/          # Core morphing library
+│   │   ├── src/         # ES6+ source files
+│   │   ├── dist/        # Built library (generated)
+│   │   └── package.json
+│   ├── gui/              # Web Components-based visual editor
+│   │   ├── src/
+│   │   ├── TASKS.md     # GUI development task list
+│   │   └── package.json
+│   └── demos/            # Example demonstrations
+│       ├── src/
+│       └── package.json
+├── docs/                 # Shared documentation
+│   ├── GUI_DEVELOPMENT.md  # GUI product requirements
+│   ├── GUI_PLANNING.md     # GUI technical planning
+│   └── ...
+├── scripts/              # Build utilities
+├── eslint.config.js      # Shared ESLint configuration
+├── .prettierrc.json      # Shared Prettier configuration
+└── package.json          # Root workspace configuration
 ```
 
 ### Available Commands
 
 ```bash
-npm run dev      # Start development server (port 3000)
-npm run build    # Build library (dist/)
-npm run preview  # Preview production build
+# Development
+npm run dev:lib      # Core library (watch mode)
+npm run dev:gui      # GUI editor (http://localhost:3001)
+npm run dev:demos    # Demos site (http://localhost:3000)
+npm run dev          # Run all packages in parallel
+
+# Building
+npm run build        # Build all packages
+npm run build:lib    # Build core library only
+npm run build:gui    # Build GUI only
+npm run build:demos  # Build demos only
+
+# Testing
+npm run test         # Run all tests
+npm run lint         # Lint all packages
+npm run format       # Format code with Prettier
 ```
 
-### Development Server
+### Development Servers
 
-The dev server provides:
-- Hot module replacement (instant updates)
-- Source maps for debugging
-- Access to all examples and GUI
-- Fast rebuild times (~100ms)
+The monorepo provides multiple dev servers:
 
-**URLs:**
-- Landing page: `http://localhost:3000/`
-- GUI Editor: `http://localhost:3000/gui.html`
-- Demos: `http://localhost:3000/demos/`
+**Demos (port 3000):**
+```bash
+npm run dev:demos
+```
+- Interactive demonstrations at `http://localhost:3000/`
+- Hot module replacement
+- Fast rebuilds
+
+**GUI Editor (port 3001):**
+```bash
+npm run dev:gui
+```
+- Visual mesh editor at `http://localhost:3001/`
+- Web Components-based interface (in development)
+
+**Core Library (watch mode):**
+```bash
+npm run dev:lib
+```
+- Automatic rebuilds on file changes
+- Used by GUI and demos packages
 
 ---
 

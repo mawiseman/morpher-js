@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MorpherJS v2.0 - Examples</title>
+  <title>MorpherJS Demos - v2.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
   <style>
     * {
       margin: 0;
@@ -13,286 +14,303 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 40px 20px;
+      background: #f5f5f5;
+      padding: 20px;
       color: #333;
+      line-height: 1.6;
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto;
-    }
-
-    header {
-      text-align: center;
-      color: white;
-      margin-bottom: 50px;
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
     h1 {
-      font-size: 3.5em;
-      margin-bottom: 15px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .tagline {
-      font-size: 1.3em;
-      opacity: 0.95;
-      margin-bottom: 10px;
-    }
-
-    .version {
-      display: inline-block;
-      padding: 8px 16px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 20px;
-      font-size: 0.9em;
-      margin-top: 10px;
-    }
-
-    .intro {
-      background: white;
-      border-radius: 15px;
-      padding: 30px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-      margin-bottom: 40px;
-    }
-
-    .intro h2 {
       color: #667eea;
-      margin-bottom: 15px;
+      margin-bottom: 30px;
+      font-size: 2.5em;
     }
 
-    .intro p {
-      line-height: 1.8;
-      color: #555;
-      margin-bottom: 10px;
-    }
-
-    .examples-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 25px;
-      margin-bottom: 40px;
-    }
-
-    .example-card {
-      background: white;
-      border-radius: 15px;
-      padding: 30px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-
-    .example-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 50px rgba(0,0,0,0.3);
-    }
-
-    .example-card h3 {
+    h2 {
       color: #667eea;
-      font-size: 1.5em;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .example-icon {
+      margin-top: 40px;
+      margin-bottom: 20px;
       font-size: 1.8em;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
     }
 
-    .example-card p {
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 15px;
+    section {
+      margin-bottom: 60px;
     }
 
-    .example-card .features {
-      list-style: none;
-      margin-top: 15px;
+    .demo {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
     }
 
-    .example-card .features li {
-      padding: 6px 0;
-      color: #888;
-      font-size: 0.9em;
+    .preview {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap;
     }
 
-    .example-card .features li:before {
-      content: "✓ ";
-      color: #4caf50;
-      font-weight: bold;
+    .preview canvas {
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      background: white;
+    }
+
+    .controls {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .controls label {
+      display: block;
+      margin: 15px 0;
+    }
+
+    .controls input[type="range"] {
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    .controls input[type="checkbox"] {
       margin-right: 8px;
     }
 
-    .cta-button {
-      display: inline-block;
-      margin-top: 15px;
+    button {
       padding: 10px 20px;
+      margin: 5px;
+      border: none;
       background: #667eea;
       color: white;
-      border-radius: 8px;
-      font-weight: 500;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
       transition: background 0.3s ease;
     }
 
-    .example-card:hover .cta-button {
+    button:hover {
       background: #5568d3;
     }
 
-    .footer {
-      text-align: center;
-      color: white;
-      padding: 30px;
-      opacity: 0.9;
+    button .icon {
+      display: inline-block;
+      margin-right: 5px;
     }
 
-    .footer a {
-      color: white;
+    pre {
+      background: #282c34;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    code {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    p {
+      margin: 15px 0;
+    }
+
+    a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    a:hover {
       text-decoration: underline;
     }
 
-    .status-badge {
+    .clear {
+      clear: both;
+    }
+
+    .back-link {
       display: inline-block;
-      padding: 4px 10px;
-      background: #4caf50;
-      color: white;
-      border-radius: 12px;
-      font-size: 0.75em;
-      font-weight: 500;
-      text-transform: uppercase;
-      margin-left: 10px;
-    }
-
-    .status-badge:has(+ .status-badge) {
+      margin-bottom: 20px;
+      padding: 10px 20px;
       background: #667eea;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
     }
 
-    .coming-soon {
-      background: #ff9800;
-    }
-
-    .new-badge {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.8; }
-    }
-
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 2.5em;
-      }
-
-      .examples-grid {
-        grid-template-columns: 1fr;
-      }
+    .back-link:hover {
+      background: #5568d3;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>MorpherJS</h1>
-      <p class="tagline">Modern ES6+ Image Morphing Library</p>
-      <div class="version">Version 2.0</div>
-    </header>
+    <h1>MorpherJS Demos</h1>
+    <p>
+      These demonstrations showcase the capabilities of MorpherJS v2.0, now fully migrated to ES6+ JavaScript.
+      All demos have been converted from the original to work with the modernized library.
+    </p>
 
-    <div class="intro">
-      <h2>Welcome to MorpherJS v2.0</h2>
+    <!-- Demo 1: Basic Setup -->
+    <section id="demo1-section">
+      <h2>1. Basic Setup</h2>
       <p>
-        MorpherJS is a powerful JavaScript library for creating smooth morphing effects between multiple images
-        using HTML5 Canvas and mesh deformation techniques.
+        Use the GUI to setup images and meshes. Then simply create new Morpher object using JSON code exported from GUI.
       </p>
+
+      <div class="demo" id="demo1">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <button data-action="reset" title="Reset">🔄 Reset</button>
+            <button data-action="play" title="Play">▶️ Play</button>
+            <input type="range" min="0" max="1" step="0.01" value="0">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo 2: Multiple Images -->
+    <section id="demo2-section">
+      <h2>2. Multiple Images, Different Sizes</h2>
+      <p>You can blend as many images as you like. Images don't need to have same dimensions.</p>
       <p>
-        <strong>New in v2.0:</strong> Complete rewrite in modern ES6+ JavaScript, Vite build system,
-        multiple module formats (ESM, CJS, UMD), and significant performance improvements.
+        When morphing multiple images, the <code>set</code> function expects an array of factors - one factor for each image.
+        Keep in mind that in typical approach these factors should sum to 1.
+        If you exceed this number, you get oversized, overexposed image – this can be useful to create a bouncing effect.
       </p>
-    </div>
 
-    <h2 style="color: white; margin-bottom: 20px; font-size: 2em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-      Examples & Demos
-    </h2>
+      <div class="demo" id="demo2">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <label>
+              <div>Red Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="1" name="parrot1">
+            </label>
+            <label>
+              <div>Green Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="0" name="parrot2">
+            </label>
+            <label>
+              <div>Blue Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="0" name="parrot3">
+            </label>
+            <p>
+              <label>
+                <input type="checkbox" name="limit" checked>
+                Restrict factor sum to 1
+              </label>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <div class="examples-grid">
-      <a href="/gui.html" class="example-card">
-        <h3>
-          <span class="example-icon">🎨</span>
-          GUI Editor
-          <span class="status-badge new-badge">New</span>
-        </h3>
-        <p>
-          Visual editor for creating morphing projects. Build meshes, add images, and export configurations - all in your browser.
-        </p>
-        <ul class="features">
-          <li>Multi-project management</li>
-          <li>Visual mesh editing with drag & drop</li>
-          <li>Real-time morphing preview</li>
-          <li>Custom blend functions</li>
-          <li>Export to JSON</li>
-        </ul>
-        <span class="cta-button">Open Editor →</span>
-      </a>
-
-      <a href="/examples/demos/" class="example-card">
-        <h3>
-          <span class="example-icon">🎭</span>
-          All Original Demos
-          <span class="status-badge">Ready</span>
-        </h3>
-        <p>
-          Complete collection of original MorpherJS demos, fully migrated to v2.0 with modern ES6+ JavaScript.
-        </p>
-        <ul class="features">
-          <li>5 comprehensive demonstrations</li>
-          <li>Real image morphing (plums, raspberries, parrots)</li>
-          <li>Custom easing & blend functions</li>
-          <li>API usage examples</li>
-        </ul>
-        <span class="cta-button">View Demos →</span>
-      </a>
-    </div>
-
-    <div class="intro">
-      <h2>Quick Start</h2>
+    <!-- Demo 3: Easing -->
+    <section id="demo3-section">
+      <h2>3. Easing Functions</h2>
       <p>
-        <strong>Installation:</strong>
+        You can pass your own easing function to control animation timing. The demo includes a cubic ease-in-out,
+        an elastic bounce effect, and a custom stepwise function.
       </p>
-      <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 10px 0;">npm install</pre>
 
-      <p style="margin-top: 15px;">
-        <strong>Run Development Server:</strong>
-      </p>
-      <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 10px 0;">npm run dev</pre>
+      <div class="demo" id="demo3">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <button data-action="reset" title="Reset">🔄 Reset</button>
+            <button data-action="easeInOutCubic">▶️ Ease In Out Cubic</button>
+            <button data-action="easeOutElastic">▶️ Elastic Bounce</button>
+            <button data-action="custom">▶️ Custom Stepwise</button>
+          </div>
+        </div>
+      </div>
+    </section>
 
-      <p style="margin-top: 15px;">
-        <strong>Build Library:</strong>
-      </p>
-      <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto; margin: 10px 0;">npm run build</pre>
-    </div>
+    <!-- Demo 4: Blend & Final Touch -->
+    <section id="demo4-section">
+      <h2>4. Blend & Final Touch Functions</h2>
+      <p>You can define your own image blend rules. There are two functions that can be customized:</p>
 
-    <footer class="footer">
+      <h3>Blend Function</h3>
       <p>
-        <strong>MorpherJS v2.0</strong> - Modern ES6+ Image Morphing Library
+        Blend function's goal is to mix two images. It takes 3 arguments: destination canvas (on which the results should be drawn),
+        source canvas (which holds image that should be drawn) and weight — number between 0 (don't draw) and 1 (completely cover destination canvas with this image).
       </p>
-      <p style="margin-top: 10px;">
-        <a href="https://github.com/jembezmamy/morpher-js" target="_blank">GitHub</a> ·
-        <a href="/README.md" target="_blank">Documentation</a> ·
-        <a href="http://fruit-labour.nibynic.com/" target="_blank">Original Project</a>
+
+      <h3>Final Touch Function</h3>
+      <p>
+        Final touch function is called after all images are blended into morpher's canvas.
+        It takes one argument — the resulting canvas — and can modify it in any way you need.
       </p>
-      <p style="margin-top: 15px; font-size: 0.9em;">
-        Original by Paweł Bator (2012) · v2.0 Modernization (2025) · MIT License
+
+      <div class="demo" id="demo4">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <button data-action="reset" title="Reset">🔄 Reset</button>
+            <button data-action="play" title="Play">▶️ Play</button>
+            <input type="range" min="0" max="1" step="0.01" value="0">
+            <label>
+              <input type="checkbox" name="blend">
+              Custom blend (glow effect)
+            </label>
+            <label>
+              <input type="checkbox" name="finalTouch">
+              Custom final touch (threshold)
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo 5: API Usage -->
+    <section id="demo5-section">
+      <h2>5. Defining Mesh with API</h2>
+      <p>
+        If you wish, you can use MorpherJS API to define images and meshes instead of
+        providing JSON configuration.
       </p>
-    </footer>
+
+      <div class="demo" id="demo5">
+        <div class="preview">
+          <!-- Canvas will be inserted here -->
+          <div class="controls">
+            <label>
+              <div>Red Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="1" name="parrot1">
+            </label>
+            <label>
+              <div>Green Parrot</div>
+              <input type="range" min="0" max="1" step="0.01" value="0" name="parrot2">
+            </label>
+            <label>
+              <div>Black Circle</div>
+              <input type="range" min="0" max="1" step="0.01" value="0" name="circle">
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script type="module" src="./src/demos/demos.js"></script>
 </body>
 </html>

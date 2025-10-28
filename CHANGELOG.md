@@ -4,7 +4,31 @@ All notable changes to MorpherJS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.0.0] - 2025-01-XX
+## [Unreleased]
+
+### Documentation & Project Organization
+
+#### Added
+- Quick Start section in README for immediate setup
+- Development documentation section with GUI planning references
+- Clearer browser compatibility statement ("latest versions")
+
+#### Changed
+- Reorganized documentation: moved GUI_DEVELOPMENT.md and GUI_PLANNING.md to docs/
+- Moved TASKS.md to packages/gui/TASKS.md (package-specific location)
+- Updated CONTRIBUTING.md to reflect monorepo structure and commands
+- Improved CLAUDE.md with safer port-specific process management
+
+#### Removed
+- MONOREPO.md (content was 80% duplicate of README.md, unique content consolidated)
+
+#### Fixed
+- Demo image paths corrected from `../images/` to `/src/images/`
+- Process management instructions now target specific ports instead of killing all Node processes
+
+---
+
+## [2.0.0] - 2025-01-28
 
 ### Major Rewrite: CoffeeScript → ES6+ JavaScript
 
