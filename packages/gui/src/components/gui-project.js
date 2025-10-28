@@ -126,6 +126,14 @@ class GuiProject extends BaseComponent {
       });
     }
 
+    // View/Edit JSON button
+    const viewJsonBtn = this.query('.btn-view-json');
+    if (viewJsonBtn) {
+      this.addTrackedListener(viewJsonBtn, 'click', () => {
+        this.showProjectJsonModal();
+      });
+    }
+
     // File input
     const fileInput = this.query('#file-input');
     if (fileInput) {
@@ -409,6 +417,7 @@ class GuiProject extends BaseComponent {
     return `
       <div class="zoom-controls">
         <button class="btn-add-images add-image-btn">+ Add Images</button>
+        <button class="btn-view-json">View / Edit JSON</button>
         <span class="zoom-label">Zoom:</span>
         <input
           type="range"
@@ -460,7 +469,14 @@ class GuiProject extends BaseComponent {
             />
           </div>
           <div class="button-row">
-            <button class="btn-json" data-image-id="${image.id}">View / Edit JSON</button>
+            <input
+              type="text"
+              class="sitecore-id-input"
+              placeholder="Sitecore ID"
+              value="${image.sitecoreId || ''}"
+              data-image-id="${image.id}"
+              title="Sitecore ID"
+            />
             <button class="btn-delete" data-image-id="${image.id}">Delete Image</button>
           </div>
         </div>
@@ -498,7 +514,8 @@ class GuiProject extends BaseComponent {
           flex-shrink: 0;
         }
 
-        .btn-add-images {
+        .btn-add-images,
+        .btn-view-json {
           padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
           background: var(--color-primary, #007bff);
           color: white;
@@ -510,8 +527,17 @@ class GuiProject extends BaseComponent {
           transition: background-color 0.2s;
         }
 
-        .btn-add-images:hover {
+        .btn-add-images:hover,
+        .btn-view-json:hover {
           background: var(--color-primary-hover, #0056b3);
+        }
+
+        .btn-view-json {
+          background: var(--color-secondary, #6c757d);
+        }
+
+        .btn-view-json:hover {
+          background: var(--color-secondary-hover, #5a6268);
         }
 
         /* Source Images Row (50vh) */
@@ -658,23 +684,29 @@ class GuiProject extends BaseComponent {
           display: flex;
           gap: 8px;
           width: 100%;
+          align-items: center;
         }
 
-        /* JSON button */
-        .btn-json {
+        /* Sitecore ID Input */
+        .sitecore-id-input {
           flex: 1;
           padding: 8px 12px;
-          background: var(--color-primary, #007bff);
-          color: white;
-          border: none;
+          border: 1px solid var(--color-border, #ddd);
           border-radius: 4px;
           font-size: var(--font-size-sm, 14px);
-          cursor: pointer;
-          transition: background var(--transition-fast, 150ms ease);
+          font-family: inherit;
+          background: var(--color-surface, #fff);
+          color: var(--color-text, #333);
+          transition: border-color 0.2s;
         }
 
-        .btn-json:hover {
-          background: var(--color-primary-hover, #0056b3);
+        .sitecore-id-input:focus {
+          outline: none;
+          border-color: var(--color-primary, #007bff);
+        }
+
+        .sitecore-id-input::placeholder {
+          color: var(--color-text-muted, #999);
         }
 
         /* Delete button */
@@ -973,7 +1005,7 @@ class GuiProject extends BaseComponent {
         <div class="json-modal">
           <div class="json-modal-content">
             <div class="json-modal-header">
-              <h3 class="json-modal-title">Image JSON Data</h3>
+              <h3 class="json-modal-title">Project JSON Data</h3>
               <button class="json-modal-close">&times;</button>
             </div>
             <textarea class="json-textarea" spellcheck="false"></textarea>
@@ -1173,7 +1205,7 @@ class GuiProject extends BaseComponent {
   addImageEventListeners() {
     this.addWeightSliderListeners();
     this.addCanvasInteractionListeners();
-    this.addJsonButtonListeners();
+    this.addSitecoreIdListeners();
     this.addDeleteButtonListeners();
   }
 
@@ -1250,6 +1282,26 @@ class GuiProject extends BaseComponent {
       // change = on release (save to localStorage)
       this.addTrackedListener(slider, 'input', handleWeightInput);
       this.addTrackedListener(slider, 'change', handleWeightChange);
+    });
+  }
+
+  /**
+   * Add event listeners for Sitecore ID inputs
+   */
+  addSitecoreIdListeners() {
+    const inputs = this.queryAll('.sitecore-id-input');
+    inputs.forEach(input => {
+      this.addTrackedListener(input, 'input', (e) => {
+        const imageId = e.target.dataset.imageId;
+        const value = e.target.value;
+        const image = this.findImageById(imageId);
+
+        if (image) {
+          image.sitecoreId = value;
+          // Save to localStorage
+          this.project.save();
+        }
+      });
     });
   }
 
@@ -1438,25 +1490,9 @@ class GuiProject extends BaseComponent {
   }
 
   /**
-   * Add event listeners for JSON buttons
+   * Show the JSON modal for the entire project
    */
-  addJsonButtonListeners() {
-    const jsonButtons = this.queryAll('.btn-json');
-    jsonButtons.forEach(btn => {
-      this.addTrackedListener(btn, 'click', (e) => {
-        const imageId = e.target.dataset.imageId;
-        const image = this.findImageById(imageId);
-        if (image) {
-          this.showJsonModal(image);
-        }
-      });
-    });
-  }
-
-  /**
-   * Show the JSON modal for an image
-   */
-  showJsonModal(image) {
+  showProjectJsonModal() {
     const modal = this.query('.json-modal');
     const textarea = this.query('.json-textarea');
     const copyBtn = this.query('.json-btn-copy');
@@ -1464,18 +1500,14 @@ class GuiProject extends BaseComponent {
     const cancelBtn = this.query('.json-btn-cancel');
     const closeBtn = this.query('.json-modal-close');
 
-    // Get JSON data for the image (points and metadata)
-    const imageData = {
-      points: image.points,
-      url: image.url,
-      targetWeight: image.targetWeight
-    };
+    // Get project data as JSON (using toJSON method)
+    const projectData = this.project.toJSON();
 
     // Display formatted JSON
-    textarea.value = JSON.stringify(imageData, null, 2);
+    textarea.value = JSON.stringify(projectData, null, 2);
 
-    // Store current image reference
-    modal.dataset.currentImageId = image.id;
+    // Clear any image-specific data
+    delete modal.dataset.currentImageId;
 
     // Show modal
     modal.classList.add('active');
@@ -1504,27 +1536,18 @@ class GuiProject extends BaseComponent {
       try {
         const updatedData = JSON.parse(textarea.value);
 
-        // Validate that points exist and are valid
-        if (!Array.isArray(updatedData.points)) {
-          alert('Invalid JSON: points must be an array');
+        // Validate project structure
+        if (!updatedData.images || !Array.isArray(updatedData.images)) {
+          alert('Invalid JSON: images array is required');
           return;
         }
 
-        // Update image points
-        image.setPoints(updatedData.points);
-
-        // Update other properties if present
-        if (updatedData.targetWeight !== undefined) {
-          image.targetWeight = updatedData.targetWeight;
-        }
-
-        // Trigger triangulation and morpher update
-        this.project.autoTriangulate();
+        // Update the project using fromJSON
+        this.project.fromJSON(updatedData);
         this.project.save();
 
         // Redraw everything
-        this.drawCanvases();
-        this.reinitMorpherPreview();
+        this.render();
 
         // Close modal
         modal.classList.remove('active');

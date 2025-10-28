@@ -26,6 +26,7 @@ export class Image extends EventTarget {
    * @param {number} [attrs.weight=0] - Actual blend weight (0-1)
    * @param {number} [attrs.x=0] - X position offset
    * @param {number} [attrs.y=0] - Y position offset
+   * @param {string} [attrs.sitecoreId=''] - Sitecore ID for external reference
    */
   constructor(attrs = {}) {
     super();
@@ -37,6 +38,7 @@ export class Image extends EventTarget {
     this._weight = attrs.weight ?? 0;
     this.x = attrs.x ?? 0;
     this.y = attrs.y ?? 0;
+    this.sitecoreId = attrs.sitecoreId || '';
 
     // Mesh points for this image (normalized coordinates 0-1)
     // Points now have format: { id: number, x: number, y: number }
@@ -317,6 +319,7 @@ export class Image extends EventTarget {
       weight: this._weight,
       x: this.x,
       y: this.y,
+      sitecoreId: this.sitecoreId,
       points: this.points,
       nextPointId: this.nextPointId,
     };
