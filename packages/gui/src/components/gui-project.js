@@ -270,9 +270,9 @@ class GuiProject extends BaseComponent {
     if (this.viewMode === 'portrait') {
       const canvases = this.queryAll('.image-canvas');
       canvases.forEach(canvas => {
-        // Get the natural dimensions from canvas attributes
-        const naturalWidth = canvas.width;
-        const naturalHeight = canvas.height;
+        // Get the natural dimensions from dataset (stored during image load)
+        const naturalWidth = parseFloat(canvas.dataset.naturalWidth) || canvas.width;
+        const naturalHeight = parseFloat(canvas.dataset.naturalHeight) || canvas.height;
 
         // Set CSS dimensions to natural * zoom
         canvas.style.width = `${naturalWidth * this.zoomLevel}px`;
@@ -308,8 +308,9 @@ class GuiProject extends BaseComponent {
       if (this.viewMode === 'portrait') {
         const canvases = this.queryAll('.image-canvas');
         canvases.forEach(canvas => {
-          const naturalWidth = canvas.width;
-          const naturalHeight = canvas.height;
+          // Get the natural dimensions from dataset (stored during image load)
+          const naturalWidth = parseFloat(canvas.dataset.naturalWidth) || canvas.width;
+          const naturalHeight = parseFloat(canvas.dataset.naturalHeight) || canvas.height;
           canvas.style.width = `${naturalWidth * this.zoomLevel}px`;
           canvas.style.height = `${naturalHeight * this.zoomLevel}px`;
         });
@@ -557,22 +558,27 @@ class GuiProject extends BaseComponent {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          overflow: hidden;
+          max-height: 85vh;
+          overflow-y: auto;
         }
 
         .tiles-container.portrait-mode .canvas-container {
-          flex: 1;
-          min-height: 0;
+          flex: 0 0 auto;
+          min-height: 200px;
+          max-height: 50vh;
           overflow: auto;
-          height: auto;
           position: relative;
+          /* Ensure scrolling works properly */
+          width: 100%;
         }
 
         .tiles-container.portrait-mode .image-canvas {
           display: block;
-          max-width: none;
-          max-height: none;
           /* Dimensions set via JavaScript in handleZoomChange */
+          /* Ensure canvas dimensions are respected for scrolling */
+          max-width: none !important;
+          max-height: none !important;
+          flex-shrink: 0;
         }
 
         .tiles-container.drag-over {
@@ -1041,8 +1047,9 @@ class GuiProject extends BaseComponent {
       if (this.viewMode === 'portrait') {
         const canvases = this.queryAll('.image-canvas');
         canvases.forEach(canvas => {
-          const naturalWidth = canvas.width;
-          const naturalHeight = canvas.height;
+          // Get the natural dimensions from dataset (stored during image load)
+          const naturalWidth = parseFloat(canvas.dataset.naturalWidth) || canvas.width;
+          const naturalHeight = parseFloat(canvas.dataset.naturalHeight) || canvas.height;
           canvas.style.width = `${naturalWidth * this.zoomLevel}px`;
           canvas.style.height = `${naturalHeight * this.zoomLevel}px`;
         });
@@ -1102,10 +1109,23 @@ class GuiProject extends BaseComponent {
         const canvas = this.query(`.image-canvas[data-image-id="${imageId}"]`);
         if (!canvas) return; // Canvas might have been removed
 
-        // Set canvas dimensions to match its rendered size
-        const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        // Store natural image dimensions for zoom calculations
+        canvas.dataset.naturalWidth = img.naturalWidth;
+        canvas.dataset.naturalHeight = img.naturalHeight;
+
+        // Set canvas buffer dimensions
+        // In portrait mode with zoom, use natural dimensions to allow full scrolling
+        // In other modes, use rendered size
+        if (this.viewMode === 'portrait' && this.zoomLevel !== 1.0) {
+          // Use natural dimensions for canvas buffer so we can scroll the full zoomed image
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+        } else {
+          // Set canvas dimensions to match its rendered size
+          const rect = canvas.getBoundingClientRect();
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+        }
 
         const ctx = canvas.getContext('2d');
 
