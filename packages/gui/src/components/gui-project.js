@@ -1261,11 +1261,10 @@ class GuiProject extends BaseComponent {
     this.hoveredPointId = null;
 
     const canvases = this.queryAll('.image-canvas');
-    canvases.forEach((canvas, canvasIndex) => {
+    canvases.forEach((canvas) => {
       let draggedPointIndex = null;
       let isDragging = false;
       const imageId = canvas.dataset.imageId;
-      const isFirstImage = canvasIndex === 0;
 
       this.addTrackedListener(canvas, 'mousedown', (e) => {
         // Only handle left-click (button 0)
@@ -1331,12 +1330,11 @@ class GuiProject extends BaseComponent {
             this.drawCanvases(); // Redraw all canvases to show highlight
           }
 
-          // First image: crosshair for adding points, grab for dragging
-          // Other images: default cursor (no adding), grab for dragging
+          // All images: crosshair for adding points, grab for dragging
           if (nearest) {
             canvas.style.cursor = 'grab';
           } else {
-            canvas.style.cursor = isFirstImage ? 'crosshair' : 'default';
+            canvas.style.cursor = 'crosshair';
           }
         }
       });
@@ -1351,20 +1349,21 @@ class GuiProject extends BaseComponent {
           // Finished dragging
           isDragging = false;
           draggedPointIndex = null;
-          canvas.style.cursor = isFirstImage ? 'crosshair' : 'default';
-        } else if (isFirstImage) {
+          canvas.style.cursor = 'crosshair';
+        } else {
           // Click without drag - add new point to ALL images at same position
-          // (only allowed on first image)
           const coords = this.getCanvasCoordinates(canvas, e);
           const normalizedX = (coords.x - coords.offsetX) / coords.drawWidth;
           const normalizedY = (coords.y - coords.offsetY) / coords.drawHeight;
 
           // Add to all images to keep them in sync
-          // Use the first image to generate the ID, then use same ID for all images
+          // Use the current image to generate the ID, then use same ID for all images
           let pointId = null;
-          this.project.images.forEach((img, idx) => {
-            if (idx === 0) {
-              // First image generates the ID
+          const currentImage = this.findImageById(imageId);
+
+          this.project.images.forEach((img) => {
+            if (img === currentImage) {
+              // Current image generates the ID
               pointId = img.addPoint(normalizedX, normalizedY);
             } else {
               // Other images use the same ID
@@ -1379,17 +1378,12 @@ class GuiProject extends BaseComponent {
         if (isDragging) {
           isDragging = false;
           draggedPointIndex = null;
-          canvas.style.cursor = isFirstImage ? 'crosshair' : 'default';
+          canvas.style.cursor = 'crosshair';
         }
       });
 
       this.addTrackedListener(canvas, 'contextmenu', (e) => {
         e.preventDefault(); // Prevent default context menu
-
-        // Only allow deletion on first image
-        if (!isFirstImage) {
-          return;
-        }
 
         const image = this.findImageById(imageId);
         if (!image) {
@@ -1420,8 +1414,9 @@ class GuiProject extends BaseComponent {
           this.project.autoTriangulate();
           this.project.save();
 
-          // Trigger re-render
+          // Trigger re-render and reinit morpher preview
           this.drawCanvases();
+          this.reinitMorpherPreview();
         }
       });
 

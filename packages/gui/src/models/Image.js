@@ -14,7 +14,7 @@
  * - change:url - Fired when URL changes
  */
 
-import { generateId } from '../utils/id-generator.js';
+import { generateShortId } from '../utils/id-generator.js';
 
 export class Image extends EventTarget {
   /**
@@ -30,7 +30,7 @@ export class Image extends EventTarget {
   constructor(attrs = {}) {
     super();
 
-    this.id = attrs.id || generateId('image');
+    this.id = attrs.id || `image_${generateShortId()}`;
     this.url = attrs.url || '';
     this._file = attrs.file || null;
     this._targetWeight = attrs.targetWeight ?? 0;
