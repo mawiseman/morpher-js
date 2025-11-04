@@ -263,7 +263,7 @@ describe('Image Model', () => {
   });
 
   describe('toJSON()', () => {
-    it('should serialize to JSON', () => {
+    it('should serialize to JSON with src property', () => {
       image.id = 'test-img-1';
       image.url = 'test.jpg';
       image._file = 'data:image/png;base64,abc';
@@ -271,26 +271,30 @@ describe('Image Model', () => {
       image._weight = 0.4;
       image.x = 10;
       image.y = 20;
+      image.width = 100;
+      image.height = 200;
 
       const json = image.toJSON();
 
-      expect(json).toEqual({
-        id: 'test-img-1',
-        url: 'test.jpg',
-        file: 'data:image/png;base64,abc',
-        targetWeight: 0.5,
-        weight: 0.4,
-        x: 10,
-        y: 20,
-      });
+      expect(json.id).toBe('test-img-1');
+      expect(json.src).toBe('test.jpg');
+      expect(json.file).toBe('data:image/png;base64,abc');
+      expect(json.targetWeight).toBe(0.5);
+      expect(json.weight).toBe(0.4);
+      expect(json.x).toBe(10);
+      expect(json.y).toBe(20);
+      expect(json.width).toBe(100);
+      expect(json.height).toBe(200);
+      // Ensure 'url' property doesn't exist
+      expect(json.url).toBeUndefined();
     });
   });
 
   describe('fromJSON()', () => {
-    it('should create Image from JSON data', () => {
+    it('should create Image from JSON data with src property', () => {
       const data = {
         id: 'json-img-1',
-        url: 'loaded.jpg',
+        src: 'loaded.jpg',
         file: 'data:image/png;base64,xyz',
         targetWeight: 0.75,
         weight: 0.7,
@@ -308,6 +312,36 @@ describe('Image Model', () => {
       expect(img.weight).toBe(0.7);
       expect(img.x).toBe(5);
       expect(img.y).toBe(15);
+    });
+
+    it('should handle legacy url property for backward compatibility', () => {
+      const data = {
+        id: 'json-img-2',
+        url: 'legacy.jpg',
+        file: 'data:image/png;base64,xyz',
+        targetWeight: 0.5,
+        weight: 0.5,
+      };
+
+      const img = Image.fromJSON(data);
+
+      expect(img).toBeInstanceOf(Image);
+      expect(img.id).toBe('json-img-2');
+      expect(img.url).toBe('legacy.jpg');
+    });
+
+    it('should prefer src over url if both are present', () => {
+      const data = {
+        id: 'json-img-3',
+        src: 'new-source.jpg',
+        url: 'old-source.jpg',
+        file: 'data:image/png;base64,xyz',
+      };
+
+      const img = Image.fromJSON(data);
+
+      expect(img).toBeInstanceOf(Image);
+      expect(img.url).toBe('new-source.jpg');
     });
   });
 
