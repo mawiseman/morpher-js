@@ -189,8 +189,21 @@ export class Project extends EventTarget {
 
     // Listen to point changes and always save
     // (skipSave only applies to initial project load, not ongoing changes)
-    image.addEventListener('points:change', () => {
-      this.autoTriangulate();
+    image.addEventListener('points:change', (event) => {
+      // Only auto-triangulate when we have exactly 3 points and no triangles yet
+      // After that, triangles should only be created manually via midpoint splitting
+      const shouldAutoTriangulate =
+        (this.images[0].points.length === 3 && this.triangles.length === 0);
+
+      if (shouldAutoTriangulate) {
+        this.autoTriangulate();
+      } else if (this.triangles.length > 0) {
+        // If we already have triangles, just update midpoints without retriangulating
+        this.images.forEach(img => {
+          img.updateMidpoints(this.triangles);
+        });
+      }
+
       this.save();
     });
 
@@ -243,6 +256,11 @@ export class Project extends EventTarget {
 
     const points = this.images[0].points;
     this.triangles = triangulate(points);
+
+    // Update midpoints for all images based on new triangulation
+    this.images.forEach(image => {
+      image.updateMidpoints(this.triangles);
+    });
 
     this.dispatchEvent(new CustomEvent('mesh:change', {
       detail: { type: 'triangulation', triangles: this.triangles, project: this }

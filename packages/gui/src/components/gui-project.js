@@ -423,6 +423,30 @@ class GuiProject extends BaseComponent {
     return nearestPointId !== null ? { pointId: nearestPointId, distance: nearestDistance } : null;
   }
 
+  findNearestMidpoint(midpoints, x, y, offsetX, offsetY, drawWidth, drawHeight, maxDistance = 12) {
+    let nearestMidpointId = null;
+    let nearestMidpoint = null;
+    let nearestDistance = Infinity;
+
+    if (!midpoints || midpoints.length === 0) {
+      return null;
+    }
+
+    midpoints.forEach((midpoint) => {
+      const midpointX = offsetX + midpoint.x * drawWidth;
+      const midpointY = offsetY + midpoint.y * drawHeight;
+      const distance = Math.sqrt(Math.pow(x - midpointX, 2) + Math.pow(y - midpointY, 2));
+
+      if (distance < maxDistance && distance < nearestDistance) {
+        nearestMidpointId = midpoint.id;
+        nearestMidpoint = midpoint;
+        nearestDistance = distance;
+      }
+    });
+
+    return nearestMidpointId !== null ? { midpointId: nearestMidpointId, midpoint: nearestMidpoint, distance: nearestDistance } : null;
+  }
+
   /**
    * Generate zoom controls HTML
    * @returns {string} Zoom controls template
@@ -1174,7 +1198,40 @@ class GuiProject extends BaseComponent {
       });
     }
 
-    // Draw points for this specific image
+    // Draw midpoint markers (gray squares)
+    if (image.midpoints && image.midpoints.length > 0) {
+      const midpointSize = Math.max(4, Math.min(8, width / 250));
+      const hoveredMidpointSize = midpointSize * 1.4;
+
+      image.midpoints.forEach((midpoint) => {
+        const x = offsetX + midpoint.x * width;
+        const y = offsetY + midpoint.y * height;
+
+        // Highlight if this midpoint is being hovered
+        const isHovered = this.hoveredMidpointId !== null && midpoint.id === this.hoveredMidpointId;
+        const size = isHovered ? hoveredMidpointSize : midpointSize;
+
+        if (isHovered) {
+          // Draw highlighted midpoint (orange)
+          ctx.fillStyle = '#ff6b00';
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+        } else {
+          // Draw normal midpoint (gray)
+          ctx.fillStyle = 'rgba(128, 128, 128, 0.7)';
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+        }
+
+        // Draw square
+        ctx.beginPath();
+        ctx.rect(x - size / 2, y - size / 2, size, size);
+        ctx.fill();
+        ctx.stroke();
+      });
+    }
+
+    // Draw points for this specific image (circles on top)
     // Scale point sizes based on canvas resolution (accounts for zoom)
     const basePointSize = Math.max(3, Math.min(10, width / 200)); // Scale with image width
     const normalRadius = basePointSize;
@@ -1317,16 +1374,161 @@ class GuiProject extends BaseComponent {
   }
 
   /**
+   * Find which triangle contains a given point using barycentric coordinates
+   * @param {number} px - Point X coordinate (normalized 0-1)
+   * @param {number} py - Point Y coordinate (normalized 0-1)
+   * @param {Image} image - Image to check points against
+   * @returns {number|null} Triangle index or null if point is outside all triangles
+   */
+  findTriangleContainingPoint(px, py, image) {
+    for (let i = 0; i < this.project.triangles.length; i++) {
+      const [idx1, idx2, idx3] = this.project.triangles[i];
+      const p1 = image.points[idx1];
+      const p2 = image.points[idx2];
+      const p3 = image.points[idx3];
+
+      if (!p1 || !p2 || !p3) continue;
+
+      // Use barycentric coordinates to test if point is inside triangle
+      const denominator = ((p2.y - p3.y) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.y - p3.y));
+      if (Math.abs(denominator) < 0.0001) continue; // Degenerate triangle
+
+      const a = ((p2.y - p3.y) * (px - p3.x) + (p3.x - p2.x) * (py - p3.y)) / denominator;
+      const b = ((p3.y - p1.y) * (px - p3.x) + (p1.x - p3.x) * (py - p3.y)) / denominator;
+      const c = 1 - a - b;
+
+      // Point is inside triangle if all barycentric coordinates are between 0 and 1
+      if (a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1) {
+        return i;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Split a triangle into 3 smaller triangles by adding an interior point
+   * @param {number} triangleIndex - Index of triangle to split
+   * @param {number} newPointId - ID of the new interior point
+   */
+  subdivideTriangle(triangleIndex, newPointId) {
+    const triangle = this.project.triangles[triangleIndex];
+    const [idx1, idx2, idx3] = triangle;
+
+    // Get the new point's index
+    const newPointIndex = this.project.images[0].points.findIndex(p => p.id === newPointId);
+
+    // Remove the old triangle
+    this.project.triangles.splice(triangleIndex, 1);
+
+    // Add 3 new triangles connecting the new point to each edge
+    this.project.triangles.push([idx1, idx2, newPointIndex]);
+    this.project.triangles.push([idx2, idx3, newPointIndex]);
+    this.project.triangles.push([idx3, idx1, newPointIndex]);
+
+    // Update midpoints for all images
+    this.project.images.forEach(image => {
+      image.updateMidpoints(this.project.triangles);
+    });
+
+    // Save and redraw
+    this.project.save();
+    this.drawCanvases();
+  }
+
+  /**
+   * Create triangles when a midpoint is converted to a corner point
+   * Finds all triangles containing the edge and splits them
+   * @param {Object} midpoint - The midpoint with point1Id and point2Id
+   * @param {number} newPointId - The newly created corner point ID
+   */
+  createTrianglesForMidpoint(midpoint, newPointId) {
+    const { point1Id, point2Id } = midpoint;
+
+    // Find all triangles that contain this edge
+    const trianglesToKeep = [];
+    const newTriangles = [];
+
+    this.project.triangles.forEach((triangle) => {
+      const [idx1, idx2, idx3] = triangle;
+
+      // Get the actual point IDs from indices
+      const p1 = this.project.images[0].points[idx1];
+      const p2 = this.project.images[0].points[idx2];
+      const p3 = this.project.images[0].points[idx3];
+
+      if (!p1 || !p2 || !p3) {
+        trianglesToKeep.push(triangle);
+        return;
+      }
+
+      // Check if this triangle contains the edge
+      const hasEdge = (
+        (p1.id === point1Id && p2.id === point2Id) ||
+        (p2.id === point1Id && p1.id === point2Id) ||
+        (p2.id === point1Id && p3.id === point2Id) ||
+        (p3.id === point1Id && p2.id === point2Id) ||
+        (p3.id === point1Id && p1.id === point2Id) ||
+        (p1.id === point1Id && p3.id === point2Id)
+      );
+
+      if (hasEdge) {
+        // This triangle needs to be split
+        // Find the opposite point (the point not on the edge)
+        let oppositePoint;
+        if (p1.id === point1Id || p1.id === point2Id) {
+          if (p2.id === point1Id || p2.id === point2Id) {
+            oppositePoint = p3;
+          } else {
+            oppositePoint = p2;
+          }
+        } else {
+          oppositePoint = p1;
+        }
+
+        // Find indices for point1, point2, opposite, and new point
+        const point1Index = this.project.images[0].points.findIndex(p => p.id === point1Id);
+        const point2Index = this.project.images[0].points.findIndex(p => p.id === point2Id);
+        const oppositeIndex = this.project.images[0].points.findIndex(p => p.id === oppositePoint.id);
+        const newPointIndex = this.project.images[0].points.findIndex(p => p.id === newPointId);
+
+        // Add two new triangles connecting the new point to the opposite point
+        // These replace the old edge (point1-point2) with two new edges (point1-newPoint and newPoint-point2)
+        newTriangles.push([point1Index, newPointIndex, oppositeIndex]);
+        newTriangles.push([newPointIndex, point2Index, oppositeIndex]);
+      } else {
+        // Keep this triangle as-is
+        trianglesToKeep.push(triangle);
+      }
+    });
+
+    // Replace triangles array with kept triangles + new triangles
+    this.project.triangles = [...trianglesToKeep, ...newTriangles];
+
+    // Update midpoints for all images
+    this.project.images.forEach(image => {
+      image.updateMidpoints(this.project.triangles);
+    });
+
+    // Save and redraw
+    this.project.save();
+    this.drawCanvases();
+  }
+
+  /**
    * Add event listeners for canvas interactions (point adding, dragging, deletion)
    */
   addCanvasInteractionListeners() {
     // Track hovered point ID across all canvases
     this.hoveredPointId = null;
+    this.hoveredMidpointId = null;
 
     const canvases = this.queryAll('.image-canvas');
     canvases.forEach((canvas) => {
       let draggedPointIndex = null;
+      let draggedMidpointId = null;
       let isDragging = false;
+      let isDraggingMidpoint = false;
       const imageId = canvas.dataset.imageId;
 
       this.addTrackedListener(canvas, 'mousedown', (e) => {
@@ -1341,7 +1543,9 @@ class GuiProject extends BaseComponent {
         }
 
         const coords = this.getCanvasCoordinates(canvas, e);
-        const nearest = this.findNearestPoint(
+
+        // Check for corner points first (higher priority)
+        const nearestPoint = this.findNearestPoint(
           image.points,
           coords.x,
           coords.y,
@@ -1351,9 +1555,55 @@ class GuiProject extends BaseComponent {
           coords.drawHeight
         );
 
-        if (nearest) {
-          // Start dragging existing point
-          draggedPointIndex = nearest.pointId;
+        if (nearestPoint) {
+          // Start dragging existing corner point
+          draggedPointIndex = nearestPoint.pointId;
+          isDragging = true;
+          canvas.style.cursor = 'grabbing';
+          return;
+        }
+
+        // Check for midpoints (lower priority)
+        const nearestMidpoint = this.findNearestMidpoint(
+          image.midpoints,
+          coords.x,
+          coords.y,
+          coords.offsetX,
+          coords.offsetY,
+          coords.drawWidth,
+          coords.drawHeight
+        );
+
+        if (nearestMidpoint) {
+          // Convert midpoint to a real corner point and start dragging
+          const midpoint = nearestMidpoint.midpoint;
+
+          // Add the new point at the midpoint position to all images
+          let newPointId = null;
+          const currentImage = this.findImageById(imageId);
+
+          this.project.images.forEach((img) => {
+            // Find the corresponding midpoint on this image (by edge)
+            const mp = img.midpoints.find(m =>
+              (m.point1Id === midpoint.point1Id && m.point2Id === midpoint.point2Id) ||
+              (m.point1Id === midpoint.point2Id && m.point2Id === midpoint.point1Id)
+            );
+
+            const x = mp ? mp.x : midpoint.x;
+            const y = mp ? mp.y : midpoint.y;
+
+            if (img === currentImage) {
+              newPointId = img.addPoint(x, y);
+            } else {
+              img.addPoint(x, y, newPointId);
+            }
+          });
+
+          // Find the opposite point and create new triangles
+          this.createTrianglesForMidpoint(midpoint, newPointId);
+
+          // Start dragging the newly created point
+          draggedPointIndex = newPointId;
           isDragging = true;
           canvas.style.cursor = 'grabbing';
         }
@@ -1374,8 +1624,8 @@ class GuiProject extends BaseComponent {
           const normalizedY = Math.max(0, Math.min(1, (coords.y - coords.offsetY) / coords.drawHeight));
           image.updatePoint(draggedPointIndex, normalizedX, normalizedY);
         } else {
-          // Update cursor and hover highlighting when over points
-          const nearest = this.findNearestPoint(
+          // Update cursor and hover highlighting when over points or midpoints
+          const nearestPoint = this.findNearestPoint(
             image.points,
             coords.x,
             coords.y,
@@ -1385,16 +1635,40 @@ class GuiProject extends BaseComponent {
             coords.drawHeight
           );
 
-          const hoveredId = nearest ? nearest.pointId : null;
+          const nearestMidpoint = this.findNearestMidpoint(
+            image.midpoints,
+            coords.x,
+            coords.y,
+            coords.offsetX,
+            coords.offsetY,
+            coords.drawWidth,
+            coords.drawHeight
+          );
 
-          // Update global hovered point ID if changed
-          if (this.hoveredPointId !== hoveredId) {
-            this.hoveredPointId = hoveredId;
+          const hoveredPointId = nearestPoint ? nearestPoint.pointId : null;
+          const hoveredMidpointId = nearestMidpoint ? nearestMidpoint.midpointId : null;
+
+          // Update global hovered IDs if changed
+          let needsRedraw = false;
+
+          if (this.hoveredPointId !== hoveredPointId) {
+            this.hoveredPointId = hoveredPointId;
+            needsRedraw = true;
+          }
+
+          if (this.hoveredMidpointId !== hoveredMidpointId) {
+            this.hoveredMidpointId = hoveredMidpointId;
+            needsRedraw = true;
+          }
+
+          if (needsRedraw) {
             this.drawCanvases(); // Redraw all canvases to show highlight
           }
 
-          // All images: crosshair for adding points, grab for dragging
-          if (nearest) {
+          // Update cursor: prioritize points over midpoints
+          if (nearestPoint) {
+            canvas.style.cursor = 'grab';
+          } else if (nearestMidpoint) {
             canvas.style.cursor = 'grab';
           } else {
             canvas.style.cursor = 'crosshair';
@@ -1413,26 +1687,48 @@ class GuiProject extends BaseComponent {
           isDragging = false;
           draggedPointIndex = null;
           canvas.style.cursor = 'crosshair';
+          // Note: midpoints are automatically updated by the points:change event handler in Project.js
         } else {
-          // Click without drag - add new point to ALL images at same position
+          // Click without drag - add new point
           const coords = this.getCanvasCoordinates(canvas, e);
           const normalizedX = (coords.x - coords.offsetX) / coords.drawWidth;
           const normalizedY = (coords.y - coords.offsetY) / coords.drawHeight;
 
-          // Add to all images to keep them in sync
-          // Use the current image to generate the ID, then use same ID for all images
-          let pointId = null;
           const currentImage = this.findImageById(imageId);
+          if (!currentImage) return;
 
-          this.project.images.forEach((img) => {
-            if (img === currentImage) {
-              // Current image generates the ID
-              pointId = img.addPoint(normalizedX, normalizedY);
+          // If we have less than 3 points, just add the point
+          if (currentImage.points.length < 3) {
+            let pointId = null;
+            this.project.images.forEach((img) => {
+              if (img === currentImage) {
+                pointId = img.addPoint(normalizedX, normalizedY);
+              } else {
+                img.addPoint(normalizedX, normalizedY, pointId);
+              }
+            });
+          } else if (this.project.triangles.length > 0) {
+            // If we have triangles, find which triangle contains this point and split it
+            const triangleIndex = this.findTriangleContainingPoint(normalizedX, normalizedY, currentImage);
+
+            // Add the point to all images first
+            let pointId = null;
+            this.project.images.forEach((img) => {
+              if (img === currentImage) {
+                pointId = img.addPoint(normalizedX, normalizedY);
+              } else {
+                img.addPoint(normalizedX, normalizedY, pointId);
+              }
+            });
+
+            if (triangleIndex !== null) {
+              // Point is inside a triangle - split it into 3 new triangles
+              this.subdivideTriangle(triangleIndex, pointId);
             } else {
-              // Other images use the same ID
-              img.addPoint(normalizedX, normalizedY, pointId);
+              // Point is outside all triangles - retriangulate to incorporate it
+              this.project.autoTriangulate();
             }
-          });
+          }
         }
       });
 
